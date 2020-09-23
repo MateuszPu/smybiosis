@@ -7,12 +7,18 @@ import (
 )
 
 type BaseSever struct {
-	Router *gin.RouterGroup
+	Router *gin.Engine
+	Env    *Env
 	Logger *logging.StandardLogger
 }
 
+func (base *BaseSever) ApiGroup() *gin.RouterGroup {
+	return base.Router.Group("/api/v1")
+}
+
 type Env struct {
-	Env string
+	Env  string
+	Host string
 }
 
 func EnvVariable(key, defaultValue string) string {

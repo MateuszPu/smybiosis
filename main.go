@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/stripe/stripe-go/v71"
-	"html/template"
 	"pay.me/logging"
+	"pay.me/payment"
 	"pay.me/server"
 	"pay.me/user"
 	"time"
@@ -16,37 +16,39 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(requestLogger())
 	env := server.Env{
-		Env: server.EnvVariable("APP_ENV", "local"),
+		Env:  server.EnvVariable("APP_ENV", "local"),
+		Host: server.EnvVariable("HOST", "http://localhost:8080/"),
 	}
 	stripe.Key = "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"
 
 	baseServer := server.BaseSever{
-		Router: router.Group("/api/v1"),
+		Router: router,
+		Env:    &env,
 		Logger: logging.Logger(env.Env),
 	}
-	userHandlers(baseServer)
-
-	t := template.Must(template.ParseFiles("templates/index.html"))
-	router.GET("/hello/:name", func(c *gin.Context) {
-		param := c.Param("name")
-		t.Execute(c.Writer, Data{"dupadupa", param})
-	})
+	paymentService := payment.Service{Repository: payment.CreateInMemoryRepo()}
+	userHandlers(baseServer, &paymentService)
+	paymentHandlers(baseServer, &paymentService)
 
 	router.Run(":8080")
 }
 
-type Data struct {
-	Title string
-	Text string
-}
-
-func userHandlers(baseServer server.BaseSever) {
-	service := user.Service{Repository: user.CreateInMemoryRepo()}
+func userHandlers(baseServer server.BaseSever, paymentService *payment.Service) {
+	service := user.Service{Repository: user.CreateInMemoryRepo(), Env: baseServer.Env}
 	userHandler := user.Handler{
 		BaseSever: &baseServer,
 		Service:   &service,
+		PaymentService: paymentService,
 	}
 	userHandler.Routes()
+}
+
+func paymentHandlers(baseServer server.BaseSever, paymentService *payment.Service) {
+	paymentHandler := payment.Handler{
+		BaseSever: &baseServer,
+		Service: paymentService,
+	}
+	paymentHandler.Routes()
 }
 
 func requestLogger() gin.HandlerFunc {

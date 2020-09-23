@@ -14,12 +14,12 @@
 
 <script>
 var stripe = Stripe('pk_test_51HTA7JDx7zNNd5t3LFt7S0IVoFOZunDoSTi98VwRcppQ4k9VeDtYd0LN8pI0T23gkTM2cTHAY7TeLIWvN10KtTgl00S4ySFyz8', {
-  stripeAccount: 'acct_1HTY1BIVMaImXuDE'
+  stripeAccount: "{{ .StripeAccountId }}"
 });
 var elements = stripe.elements();
 var style = {
   base: {
-    color: "#32325d",
+    color: "#5d1a00",
   }
 };
 
@@ -31,7 +31,7 @@ var form = document.getElementById('payment-form');
 
 form.addEventListener('submit', function(ev) {
   ev.preventDefault();
-  stripe.confirmCardPayment("pi_1HTZ5ZIVMaImXuDEi71iiHxu_secret_duUUL3zSk48ut2gGGRUgbXMxz", {
+  stripe.confirmCardPayment({{ .StripeClientSecret }}, {
     payment_method: {
       card: card,
       billing_details: {
