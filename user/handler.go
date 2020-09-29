@@ -20,7 +20,7 @@ func (handler *Handler) Routes() *Handler {
 	authGr := handler.BaseSever.ApiGroup().Group("/user")
 	authGr.POST("", handler.createUser())
 
-	//handler.BaseSever.Router.GET("/refresh/:id", handler.finishRegistration())
+	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
 	handler.BaseSever.Router.GET("/confirm/:id", handler.finishRegistration())
 	return handler
 }
@@ -34,7 +34,7 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 		usr, err := userService.finishedStripeRegistration(linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Account does not exist"})
+			context.Redirect(http.StatusSeeOther, "/error")
 			return
 		}
 		t.Execute(context.Writer, nil)
@@ -67,23 +67,46 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 
 		user := userService.findByEmail(json.Email)
 		if user.email == json.Email {
+			//TODO: deal with situation when user was found but not finish registration process
 			handler.PaymentService.CreatePayment(user.stripeId, user.id, user.email)
-			//redirect to page?
 		} else {
 			usr, err := userService.createUser(json.Email)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
-				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error user creation"})
+				context.Redirect(http.StatusSeeOther, "/error")
 				return
 			}
 			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error stripe link creation"})
+				context.Redirect(http.StatusSeeOther, "/error")
 				return
 			}
 			context.Redirect(301, link)
 		}
 
 	}
+}
+
+func (handler *Handler) refreshRegistration() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		userService := *handler.Service
+		linkId := context.Param("id")
+		usr, err := userService.findByLinkId(linkId)
+
+		if err != nil {
+			handler.BaseSever.Logger.Errorf("User not found in database %s", err)
+			context.Redirect(http.StatusSeeOther, "/error")
+			return
+		}
+
+		link, err := userService.stripeLink(usr.stripeId, usr.linkId)
+		if err != nil {
+			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
+			context.Redirect(http.StatusSeeOther, "/error")
+			return
+		}
+		context.Redirect(301, link)
+	}
+
 }

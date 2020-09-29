@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/stripe/stripe-go/v71"
+	"pay.me/global"
 	"pay.me/logging"
 	"pay.me/payment"
 	"pay.me/server"
@@ -27,10 +28,18 @@ func main() {
 		Logger: logging.Logger(env.Env),
 	}
 	paymentService := payment.Service{Repository: payment.CreateInMemoryRepo()}
+	globalHandler(baseServer)
 	userHandlers(baseServer, &paymentService)
 	paymentHandlers(baseServer, &paymentService)
 
 	router.Run(":8080")
+}
+
+func globalHandler(srv server.BaseSever) {
+	globalHandler := global.Handler{
+		BaseServer: &srv,
+	}
+	globalHandler.Routes()
 }
 
 func userHandlers(baseServer server.BaseSever, paymentService *payment.Service) {

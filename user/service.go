@@ -52,6 +52,10 @@ func (service *Service) finishedStripeRegistration(linkId string) (user, error) 
 	return service.Repository.findByLinkId(linkId)
 }
 
+func (service *Service) findByLinkId(linkId string) (user, error){
+	return service.Repository.findByLinkId(linkId)
+}
+
 func (service *Service) stripeLink(stripeAccId string, linkId string) (string, error) {
 	refreshUrl := fmt.Sprintf("%srefresh/%s", service.Env.Host, linkId)
 	returnUrl := fmt.Sprintf("%sconfirm/%s", service.Env.Host, linkId)
