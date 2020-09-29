@@ -11,7 +11,7 @@ type Service struct {
 	Repository repository
 }
 
-func (service *Service) CreatePayment(stripeId string, userId uuid.UUID) {
+func (service *Service) CreatePayment(stripeId string, userId uuid.UUID, email string) {
 	//here we need to generate link to payment
 	paramsPa := &stripe.PaymentIntentParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{
@@ -24,18 +24,20 @@ func (service *Service) CreatePayment(stripeId string, userId uuid.UUID) {
 	paramsPa.SetStripeAccount(stripeId)
 	pi, _ := paymentintent.New(paramsPa)
 
-	service.Repository.save(payment{
+	payment := payment{
 		id:           uuid.New(),
 		userId:       userId,
 		linkId:       strings.ReplaceAll(uuid.New().String(), "-", ""),
 		stripeId:     stripeId,
 		clientSecret: pi.ClientSecret,
-	})
+	}
+	service.Repository.save(payment)
+
+	//todo: send link created link to user payment.linkId
 }
 
 func (service *Service) findPaymentByLinkId(linkId string) paymentData {
 	payment, _ := service.Repository.findByLinkId(linkId)
-
 	return paymentData{
 		StripeAccountId:    payment.stripeId,
 		StripeClientSecret: payment.clientSecret,

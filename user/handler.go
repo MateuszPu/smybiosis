@@ -29,16 +29,19 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 	t := template.Must(template.ParseFiles("templates/finish.html"))
 	return func(context *gin.Context) {
 		linkId := context.Param("id")
+		handler.BaseSever.Logger.Infof("Registration finished for %s", linkId)
 		userService := *handler.Service
 		usr, err := userService.finishedStripeRegistration(linkId)
 		if err != nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Email does not exist"})
+			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Account does not exist"})
 			return
 		}
 		t.Execute(context.Writer, nil)
-		go func(stripeId string, userId uuid.UUID) {
-			handler.PaymentService.CreatePayment(stripeId, userId)
-		}(usr.stripeId, usr.id)
+		go func(stripeId string, userId uuid.UUID, email string) {
+			handler.BaseSever.Logger.Infof("Generate payment for user %s", userId.String())
+			handler.PaymentService.CreatePayment(stripeId, userId, email)
+		}(usr.stripeId, usr.id, usr.email)
 
 	}
 }
@@ -62,19 +65,25 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 		}
 		userService := *handler.Service
 
-		//todo: alternative path when user already exist in database
-		usr, err := userService.createUser(json.Email)
-		if err != nil {
-			handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error user creation"})
-			return
+		user := userService.findByEmail(json.Email)
+		if user.email == json.Email {
+			handler.PaymentService.CreatePayment(user.stripeId, user.id, user.email)
+			//redirect to page?
+		} else {
+			usr, err := userService.createUser(json.Email)
+			if err != nil {
+				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
+				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error user creation"})
+				return
+			}
+			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
+			if err != nil {
+				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
+				context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error stripe link creation"})
+				return
+			}
+			context.Redirect(301, link)
 		}
-		link, err := userService.stripeLink(usr.stripeId, usr.linkId)
-		if err != nil {
-			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Error stripe link creation"})
-			return
-		}
-		context.Redirect(301, link)
+
 	}
 }

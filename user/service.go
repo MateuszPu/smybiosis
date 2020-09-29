@@ -69,8 +69,13 @@ func (service *Service) stripeLink(stripeAccId string, linkId string) (string, e
 	return newAcc.URL, nil
 }
 
+func (service *Service) findByEmail(email string) user {
+	return service.Repository.findByEmail(email)
+}
+
 type repository interface {
 	save(user user) error
+	findByEmail(email string) user
 	findByLinkId(linkId string) (user, error)
 	updateUserStatus(stripeId string, status string) error
 }
@@ -100,6 +105,11 @@ func (repo *RepositoryInMemory) save(user user) error {
 	}
 	repo.inMemory[user.email] = user
 	return nil
+}
+
+func (repo *RepositoryInMemory) findByEmail(email string) user {
+	usr, _ := repo.inMemory[email]
+	return usr
 }
 
 func (repo *RepositoryInMemory) updateUserStatus(linkId string, status string) error {
