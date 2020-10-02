@@ -14,8 +14,13 @@ import (
 
 type Service struct {
 	Env        *server.Env
-	Repository repository
+	Repository *repository
 }
+
+func(service *Service) repository() repository{
+	return *service.Repository
+}
+
 
 func (service *Service) createUser(email string) (user, error) {
 	stripeId, err := service.createUserInStripe(email)
@@ -28,7 +33,7 @@ func (service *Service) createUser(email string) (user, error) {
 		linkId:    strings.ReplaceAll(uuid.New().String(), "-", ""),
 		status:    "ACCOUNT_CREATED",
 		createdAt: time.Now()}
-	err = service.Repository.save(createdUser)
+	err = service.repository().save(createdUser)
 	if err != nil {
 		return user{}, err
 	}
@@ -48,12 +53,12 @@ func (service *Service) createUserInStripe(email string) (string, error) {
 }
 
 func (service *Service) finishedStripeRegistration(linkId string) (user, error) {
-	service.Repository.updateUserStatus(linkId, "STRIPE_ACCOUNT_CREATED")
-	return service.Repository.findByLinkId(linkId)
+	service.repository().updateUserStatus(linkId, "STRIPE_ACCOUNT_CREATED")
+	return service.repository().findByLinkId(linkId)
 }
 
 func (service *Service) findByLinkId(linkId string) (user, error){
-	return service.Repository.findByLinkId(linkId)
+	return service.repository().findByLinkId(linkId)
 }
 
 func (service *Service) stripeLink(stripeAccId string, linkId string) (string, error) {
@@ -74,7 +79,7 @@ func (service *Service) stripeLink(stripeAccId string, linkId string) (string, e
 }
 
 func (service *Service) findByEmail(email string) user {
-	return service.Repository.findByEmail(email)
+	return service.repository().findByEmail(email)
 }
 
 type repository interface {

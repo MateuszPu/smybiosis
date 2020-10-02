@@ -1,14 +1,23 @@
 package payment
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v71"
 	"github.com/stripe/stripe-go/v71/paymentintent"
+	"pay.me/mail"
+	"pay.me/server"
 	"strings"
 )
 
 type Service struct {
-	Repository repository
+	Repository  *repository
+	MailService *mail.Service
+	GlobalEnv   *server.Env
+}
+
+func (service *Service) repository() repository {
+	return *service.Repository
 }
 
 func (service *Service) CreatePayment(stripeId string, userId uuid.UUID, email string) {
@@ -31,13 +40,13 @@ func (service *Service) CreatePayment(stripeId string, userId uuid.UUID, email s
 		stripeId:     stripeId,
 		clientSecret: pi.ClientSecret,
 	}
-	service.Repository.save(payment)
+	service.repository().save(payment)
 
-	//todo: send link created link to user payment.linkId
+	service.MailService.SendEmailWithPaymentLink(email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkId))
 }
 
 func (service *Service) findPaymentByLinkId(linkId string) paymentData {
-	payment, _ := service.Repository.findByLinkId(linkId)
+	payment, _ := service.repository().findByLinkId(linkId)
 	return paymentData{
 		StripeAccountId:    payment.stripeId,
 		StripeClientSecret: payment.clientSecret,

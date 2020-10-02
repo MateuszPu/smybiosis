@@ -5,6 +5,7 @@ import (
 	"github.com/stripe/stripe-go/v71"
 	"pay.me/global"
 	"pay.me/logging"
+	"pay.me/mail"
 	"pay.me/payment"
 	"pay.me/server"
 	"pay.me/user"
@@ -16,46 +17,59 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Use(requestLogger())
+	stripe.Key = "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"
+
 	env := server.Env{
 		Env:  server.EnvVariable("APP_ENV", "local"),
 		Host: server.EnvVariable("HOST", "http://localhost:8080/"),
 	}
-	stripe.Key = "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"
 
 	baseServer := server.BaseSever{
 		Router: router,
 		Env:    &env,
 		Logger: logging.Logger(env.Env),
 	}
-	paymentService := payment.Service{Repository: payment.CreateInMemoryRepo()}
-	globalHandler(baseServer)
-	userHandlers(baseServer, &paymentService)
-	paymentHandlers(baseServer, &paymentService)
+	service := mail.Service{
+		Host:     server.EnvVariable("MAIL_HOST", "some"),
+		Port:     server.EnvVariable("MAIL_PORT", "port"),
+		Email:    server.EnvVariable("MAIL_LOGIN", "mail"),
+		Password: server.EnvVariable("MAIL_PASSWORD", "pass"),
+	}
+
+	repo := payment.CreateInMemoryRepo()
+	paymentService := payment.Service{
+		Repository:  &repo,
+		GlobalEnv:   &env,
+		MailService: &service}
+	globalHandler(&baseServer)
+	userHandlers(&baseServer, &paymentService)
+	paymentHandlers(&baseServer, &paymentService)
 
 	router.Run(":8080")
 }
 
-func globalHandler(srv server.BaseSever) {
+func globalHandler(srv *server.BaseSever) {
 	globalHandler := global.Handler{
-		BaseServer: &srv,
+		BaseServer: srv,
 	}
 	globalHandler.Routes()
 }
 
-func userHandlers(baseServer server.BaseSever, paymentService *payment.Service) {
-	service := user.Service{Repository: user.CreateInMemoryRepo(), Env: baseServer.Env}
+func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service) {
+	repo := user.CreateInMemoryRepo()
+	service := user.Service{Repository: &repo, Env: baseServer.Env}
 	userHandler := user.Handler{
-		BaseSever: &baseServer,
-		Service:   &service,
+		BaseSever:      baseServer,
+		Service:        &service,
 		PaymentService: paymentService,
 	}
 	userHandler.Routes()
 }
 
-func paymentHandlers(baseServer server.BaseSever, paymentService *payment.Service) {
+func paymentHandlers(baseServer *server.BaseSever, paymentService *payment.Service) {
 	paymentHandler := payment.Handler{
-		BaseSever: &baseServer,
-		Service: paymentService,
+		BaseSever: baseServer,
+		Service:   paymentService,
 	}
 	paymentHandler.Routes()
 }
