@@ -1,0 +1,10 @@
+output   = "my_models"
+no-tests = true
+
+[psql]
+  dbname = "postgres"
+  host   = "localhost"
+  port   = 5432
+  user   = "user"
+  pass   = "pass"
+  sslmode="disable"

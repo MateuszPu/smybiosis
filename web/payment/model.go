@@ -3,10 +3,10 @@ package payment
 import "github.com/google/uuid"
 
 type payment struct {
-	id uuid.UUID
-	userId uuid.UUID
-	linkId string
-	stripeId string
+	id           uuid.UUID
+	userId       uuid.UUID
+	linkId       string
+	stripeId     string
 	clientSecret string
 }
 

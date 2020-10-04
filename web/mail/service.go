@@ -30,7 +30,7 @@ func (service *Service) SendEmailWithPaymentLink(to string, link string) {
 		}()
 		t := template.Must(template.ParseFiles("templates/email/payment-link.html"))
 		var tpl bytes.Buffer
-		t.Execute(&tpl, PaymentLinkData{Link:link})
+		t.Execute(&tpl, PaymentLinkData{Link: link})
 
 		e := email.NewEmail()
 		e.From = "No-Reply <wspolpraca@weryfikacja.info>"

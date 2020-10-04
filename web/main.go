@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq" // here
 	"github.com/stripe/stripe-go/v71"
 	"pay.me/global"
 	"pay.me/logging"
@@ -13,6 +14,7 @@ import (
 )
 
 func main() {
+
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())

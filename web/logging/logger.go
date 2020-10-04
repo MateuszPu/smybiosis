@@ -35,4 +35,3 @@ func Logger(env string) *StandardLogger {
 
 	return &StandardLogger{baseLogger}
 }
-

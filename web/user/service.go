@@ -17,10 +17,9 @@ type Service struct {
 	Repository *repository
 }
 
-func(service *Service) repository() repository{
+func (service *Service) repository() repository {
 	return *service.Repository
 }
-
 
 func (service *Service) createUser(email string) (user, error) {
 	stripeId, err := service.createUserInStripe(email)
@@ -57,7 +56,7 @@ func (service *Service) finishedStripeRegistration(linkId string) (user, error) 
 	return service.repository().findByLinkId(linkId)
 }
 
-func (service *Service) findByLinkId(linkId string) (user, error){
+func (service *Service) findByLinkId(linkId string) (user, error) {
 	return service.repository().findByLinkId(linkId)
 }
 
