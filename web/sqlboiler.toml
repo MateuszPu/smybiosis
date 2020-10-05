@@ -1,10 +1,12 @@
-output   = "my_models"
+output   = "database-models"
 no-tests = true
+wipe     = true
 
 [psql]
-  dbname = "postgres"
-  host   = "localhost"
-  port   = 5432
-  user   = "user"
-  pass   = "pass"
-  sslmode="disable"
+  dbname  = "postgres"
+  host    = "localhost"
+  port    = 5432
+  user    = "user"
+  pass    = "pass"
+  sslmode = "disable"
+  blacklist = ["databasechangelog", "databasechangeloglock"]
