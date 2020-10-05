@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"os"
-	"pay.me/logging"
+	"pay.me/v4/logging"
 )
 
 type BaseSever struct {

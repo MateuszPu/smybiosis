@@ -5,8 +5,8 @@ import (
 	"github.com/google/uuid"
 	"html/template"
 	"net/http"
-	"pay.me/payment"
-	"pay.me/server"
+	"pay.me/v4/payment"
+	"pay.me/v4/server"
 	"regexp"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/stripe/stripe-go/v71"
 	"github.com/stripe/stripe-go/v71/account"
 	"github.com/stripe/stripe-go/v71/accountlink"
-	"pay.me/server"
+	"pay.me/v4/server"
 	"strings"
 	"time"
 )

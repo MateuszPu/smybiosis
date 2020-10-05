@@ -4,17 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
 	"github.com/stripe/stripe-go/v71"
-	"pay.me/global"
-	"pay.me/logging"
-	"pay.me/mail"
-	"pay.me/payment"
-	"pay.me/server"
-	"pay.me/user"
+	"pay.me/v4/global"
+	"pay.me/v4/logging"
+	"pay.me/v4/mail"
+	"pay.me/v4/payment"
+	"pay.me/v4/server"
+	"pay.me/v4/user"
 	"time"
 )
 
 func main() {
-
 	//db, err1 := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
 	//if err1 != nil {
 	//	println("a")

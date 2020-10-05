@@ -3,7 +3,7 @@ package global
 import (
 	"github.com/gin-gonic/gin"
 	"html/template"
-	"pay.me/server"
+	"pay.me/v4/server"
 )
 
 type Handler struct {
