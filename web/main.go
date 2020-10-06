@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
 	"github.com/stripe/stripe-go/v71"
@@ -14,14 +15,14 @@ import (
 )
 
 func main() {
-	//db, err1 := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
-	//if err1 != nil {
-	//	println("a")
-	//}
-	//err2 := db.Ping()
-	//if err2 != nil {
-	//	println("a")
-	//}
+	db, err1 := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
+	if err1 != nil {
+		println("a")
+	}
+	err2 := db.Ping()
+	if err2 != nil {
+		println("a")
+	}
 	//boil.SetDB(db)
 	//
 	//ctx := context.Background()
