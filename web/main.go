@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
 	"github.com/stripe/stripe-go/v71"
@@ -15,29 +14,6 @@ import (
 )
 
 func main() {
-	db, err1 := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
-	if err1 != nil {
-		println("a")
-	}
-	err2 := db.Ping()
-	if err2 != nil {
-		println("a")
-	}
-	//boil.SetDB(db)
-	//
-	//ctx := context.Background()
-	//all, err1 := models.Users().All(ctx, db)
-	//println(all)
-	//var user = &models.User{
-	//	StripeId: "asd",
-	//	LinkId:   null.StringFrom("asd"),
-	//	Email:    "aas@poczta.fm",
-	//	ID:       uuid.New().String(),
-	//}
-	//err := user.Insert(ctx, db, boil.Infer())
-	//if err != nil {
-	//	println(err)
-	//}
 
 	router := gin.New()
 	router.Use(gin.Logger())

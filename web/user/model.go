@@ -13,3 +13,6 @@ type user struct {
 	status    string
 	createdAt time.Time
 }
+
+const ACCOUNT_CREATED = "ACCOUNT_CREATED"
+const STRIPE_CONFIRMED = "STRIPE_CONFIRMED"

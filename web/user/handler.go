@@ -34,7 +34,7 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 		usr, err := userService.finishedStripeRegistration(linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
-			context.Redirect(http.StatusSeeOther, "/error")
+			context.Redirect(http.StatusNotFound, "/error")
 			return
 		}
 		t.Execute(context.Writer, nil)
@@ -73,15 +73,16 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			usr, err := userService.createUser(json.Email)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
-				context.Redirect(http.StatusSeeOther, "/error")
+				context.Redirect(http.StatusNotFound, "/error")
 				return
 			}
 			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-				context.Redirect(http.StatusSeeOther, "/error")
+				context.Redirect(http.StatusNotFound, "/error")
 				return
 			}
+
 			context.Redirect(301, link)
 		}
 

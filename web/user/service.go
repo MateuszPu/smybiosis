@@ -30,7 +30,7 @@ func (service *Service) createUser(email string) (user, error) {
 		email:     email,
 		stripeId:  stripeId,
 		linkId:    strings.ReplaceAll(uuid.New().String(), "-", ""),
-		status:    "ACCOUNT_CREATED",
+		status:    ACCOUNT_CREATED,
 		createdAt: time.Now()}
 	err = service.repository().save(createdUser)
 	if err != nil {
@@ -52,7 +52,7 @@ func (service *Service) createUserInStripe(email string) (string, error) {
 }
 
 func (service *Service) finishedStripeRegistration(linkId string) (user, error) {
-	service.repository().updateUserStatus(linkId, "STRIPE_ACCOUNT_CREATED")
+	service.repository().updateUserStatus(linkId, STRIPE_CONFIRMED)
 	return service.repository().findByLinkId(linkId)
 }
 
