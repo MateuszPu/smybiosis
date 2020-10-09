@@ -38,17 +38,20 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 			return
 		}
 		t.Execute(context.Writer, nil)
-		go func(stripeId string, userId uuid.UUID, email string) {
-			handler.BaseSever.Logger.Infof("Generate payment for user %s", userId.String())
-			handler.PaymentService.CreatePayment(stripeId, userId, email)
-		}(usr.stripeId, usr.id, usr.email)
+		go func(userId uuid.UUID) {
+			handler.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())
+			handler.PaymentService.GenerateFirstPaymentLink(userId)
+		}(usr.id)
 
 	}
 }
 
 func (handler *Handler) createUser() gin.HandlerFunc {
 	type request struct {
-		Email string `json:"email"`
+		Email       string  `json:"email"`
+		Amount      float64 `json:"amount"`
+		Currency    string  `json:"currency"`
+		Description string  `json:"description"`
 	}
 
 	return func(context *gin.Context) {
@@ -65,10 +68,15 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 		}
 		userService := *handler.Service
 
-		user := userService.findByEmail(json.Email)
+		user, _ := userService.findByEmail(json.Email)
 		if user.email == json.Email {
+			//it means user alread exist in database send link to him
 			//TODO: deal with situation when user was found but not finish registration process
-			handler.PaymentService.CreatePayment(user.stripeId, user.id, user.email)
+			paymentId, err := handler.PaymentService.CreatePayment(user.id, json.Currency, json.Amount, json.Description)
+			if err != nil {
+				//todo: log here
+			}
+			handler.PaymentService.GeneratePaymentLink(paymentId)
 		} else {
 			usr, err := userService.createUser(json.Email)
 			if err != nil {
@@ -82,7 +90,7 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 				context.Redirect(http.StatusNotFound, "/error")
 				return
 			}
-
+			handler.PaymentService.CreatePayment(usr.id, json.Currency, json.Amount, json.Description)
 			context.Redirect(301, link)
 		}
 

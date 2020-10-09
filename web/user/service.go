@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v71"
@@ -9,7 +8,6 @@ import (
 	"github.com/stripe/stripe-go/v71/accountlink"
 	"pay.me/v4/server"
 	"strings"
-	"time"
 )
 
 type Service struct {
@@ -26,12 +24,11 @@ func (service *Service) createUser(email string) (user, error) {
 	if err != nil {
 		return user{}, err
 	}
-	createdUser := user{id: uuid.New(),
+	createdUser := user{
+		id: uuid.New(),
 		email:     email,
 		stripeId:  stripeId,
-		linkId:    strings.ReplaceAll(uuid.New().String(), "-", ""),
-		status:    ACCOUNT_CREATED,
-		createdAt: time.Now()}
+		linkId:    strings.ReplaceAll(uuid.New().String(), "-", "")}
 	err = service.repository().save(createdUser)
 	if err != nil {
 		return user{}, err
@@ -52,8 +49,7 @@ func (service *Service) createUserInStripe(email string) (string, error) {
 }
 
 func (service *Service) finishedStripeRegistration(linkId string) (user, error) {
-	service.repository().updateUserStatus(linkId, STRIPE_CONFIRMED)
-	return service.repository().findByLinkId(linkId)
+	return service.repository().updateUserStatus(linkId, STRIPE_CONFIRMED)
 }
 
 func (service *Service) findByLinkId(linkId string) (user, error) {
@@ -77,55 +73,6 @@ func (service *Service) stripeLink(stripeAccId string, linkId string) (string, e
 	return newAcc.URL, nil
 }
 
-func (service *Service) findByEmail(email string) user {
+func (service *Service) findByEmail(email string) (user, error) {
 	return service.repository().findByEmail(email)
-}
-
-type repository interface {
-	save(user user) error
-	findByEmail(email string) user
-	findByLinkId(linkId string) (user, error)
-	updateUserStatus(stripeId string, status string) error
-}
-
-//for database service we will inject here mechanism to save in database
-type RepositoryInMemory struct {
-	inMemory map[string]user
-}
-
-func CreateInMemoryRepo() repository {
-	return &RepositoryInMemory{inMemory: make(map[string]user)}
-}
-
-func (repo *RepositoryInMemory) findByLinkId(linkId string) (user, error) {
-	for _, user := range repo.inMemory {
-		if user.linkId == linkId {
-			return user, nil
-		}
-	}
-	return user{}, errors.New("user does not exist")
-}
-
-func (repo *RepositoryInMemory) save(user user) error {
-	_, found := repo.inMemory[user.email]
-	if found {
-		return errors.New("user already exist")
-	}
-	repo.inMemory[user.email] = user
-	return nil
-}
-
-func (repo *RepositoryInMemory) findByEmail(email string) user {
-	usr, _ := repo.inMemory[email]
-	return usr
-}
-
-func (repo *RepositoryInMemory) updateUserStatus(linkId string, status string) error {
-	for _, user := range repo.inMemory {
-		if user.linkId == linkId {
-			user.status = status
-			repo.inMemory[user.email] = user
-		}
-	}
-	return errors.New("user not exist")
 }

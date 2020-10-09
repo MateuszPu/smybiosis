@@ -1,9 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
 	"github.com/stripe/stripe-go/v71"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"pay.me/v4/global"
 	"pay.me/v4/logging"
 	"pay.me/v4/mail"
@@ -14,6 +16,16 @@ import (
 )
 
 func main() {
+	db, _ := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
+	//if err1 != nil {
+	//	println("a")
+	//}
+	//err2 := db.Ping()
+	//if err2 != nil {
+	//	println("a")
+	//}
+	boil.SetDB(db)
+	boil.DebugMode = true
 
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -38,13 +50,13 @@ func main() {
 		Password: server.EnvVariable("MAIL_PASSWORD", "pass"),
 	}
 
-	repo := payment.CreateInMemoryRepo()
+	repo := payment.CreateSqlRepo(db)
 	paymentService := payment.Service{
 		Repository:  &repo,
 		GlobalEnv:   &env,
 		MailService: &service}
 	globalHandler(&baseServer)
-	userHandlers(&baseServer, &paymentService)
+	userHandlers(&baseServer, &paymentService, db)
 	paymentHandlers(&baseServer, &paymentService)
 
 	router.Run(":8080")
@@ -57,8 +69,8 @@ func globalHandler(srv *server.BaseSever) {
 	globalHandler.Routes()
 }
 
-func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service) {
-	repo := user.CreateInMemoryRepo()
+func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service, db *sql.DB) {
+	repo := user.CreateSqlRepo(db)
 	service := user.Service{Repository: &repo, Env: baseServer.Env}
 	userHandler := user.Handler{
 		BaseSever:      baseServer,

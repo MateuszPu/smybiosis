@@ -7,7 +7,6 @@ import (
 	"github.com/stripe/stripe-go/v71/checkout/session"
 	"pay.me/v4/mail"
 	"pay.me/v4/server"
-	"strings"
 )
 
 type Service struct {
@@ -20,83 +19,71 @@ func (service *Service) repository() repository {
 	return *service.Repository
 }
 
-func (service *Service) CreatePayment(stripConnectedAcc string, userId uuid.UUID, email string) {
-	//here we need to generate link to payment
-	//paramsPa := &stripe.PaymentIntentParams{
-	//	PaymentMethodTypes: stripe.StringSlice([]string{
-	//		"card",
-	//	}),
-	//	Amount:               stripe.Int64(1000),
-	//	Currency:             stripe.String(string(stripe.CurrencyPLN)),
-	//	ApplicationFeeAmount: stripe.Int64(100),
-	//}
-	//paramsPa.SetStripeAccount(stripConnectedAcc)
-	//pi, _ := paymentintent.New(paramsPa)
+func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
 	payment := payment{
 		id:                uuid.New(),
-		userId:            userId,
-		linkId:            strings.ReplaceAll(uuid.New().String(), "-", ""),
-		stripConnectedAcc: stripConnectedAcc,
+		currency:          currency,
+		amount:            amount,
+		description:       description,
 	}
-	service.repository().save(payment)
+	err := service.repository().save(payment, userId)
+	return payment.id, err
+}
 
-	service.MailService.SendEmailWithPaymentLink(email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkId))
+func (service *Service) GenerateFirstPaymentLink(userId uuid.UUID) {
+	payment, err := service.repository().findPaymentByUserId(userId)
+	if err != nil {
+		//todo; log here
+		return
+	}
+	service.MailService.SendEmailWithPaymentLink(payment.email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkHash.String()))
+}
+
+
+func (service *Service) GeneratePaymentLink(id uuid.UUID) {
+	payment, err := service.repository().findById(id)
+	if err != nil {
+		//todo; log here
+		return
+	}
+	service.MailService.SendEmailWithPaymentLink(payment.email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkHash.String()))
 }
 
 func (service *Service) createStripePayment(linkId string) paymentData {
 	//TODO: error handling?
-	payment, _ := service.repository().findByLinkId(linkId)
+	payment, _ := service.repository().findByLinkHash(linkId)
+
+	amount := int64(payment.amount * 100)
+	commission := payment.amount * 100 * 0.005
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{
-			"card",
+			string(stripe.PaymentMethodTypeCard),
 		}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Name:     stripe.String("Stainless Steel Water Bottle"),
-				Amount:   stripe.Int64(50000000),
+				Name:     stripe.String(payment.description),
+				Amount:   stripe.Int64(amount),
 				Currency: stripe.String(string(stripe.CurrencyPLN)),
 				Quantity: stripe.Int64(1),
 			},
 		},
 		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
-			ApplicationFeeAmount: stripe.Int64(5000),
+			ApplicationFeeAmount: stripe.Int64(int64(commission)),
 		},
-		SuccessURL: stripe.String("https://example.com/success"),
-		CancelURL:  stripe.String("https://example.com/cancel"),
+		//todo: implement two pages for this finished will mark payment as done
+		//todo: canceled will ask user do you realy want cancel or you want to back there?
+		SuccessURL: stripe.String(fmt.Sprintf("%spayment/finished/%s", service.GlobalEnv.Host, payment.confirmedHash)),
+		CancelURL:  stripe.String(fmt.Sprintf("%spayment/canceled/%s", service.GlobalEnv.Host, payment.canceledHash)),
 	}
 
-	params.SetStripeAccount(payment.stripConnectedAcc)
+	params.SetStripeAccount(payment.stripeAccId)
+	//TODO: error handling?
 	s, _ := session.New(params)
 
 	return paymentData{
-		StripeConnectedAccountId: payment.stripConnectedAcc,
+		StripeConnectedAccountId: payment.stripeAccId,
 		StripeClientSecret:       s.ID,
 	}
 
 }
 
-type repository interface {
-	save(payment)
-	findByLinkId(string) (payment, error)
-}
-
-func CreateInMemoryRepo() repository {
-	return &RepositoryInMemory{inMemory: make(map[uuid.UUID]payment)}
-}
-
-type RepositoryInMemory struct {
-	inMemory map[uuid.UUID]payment
-}
-
-func (repo *RepositoryInMemory) save(payment payment) {
-	repo.inMemory[payment.id] = payment
-}
-
-func (repo *RepositoryInMemory) findByLinkId(linkId string) (payment, error) {
-	for _, pymnt := range repo.inMemory {
-		if pymnt.linkId == linkId {
-			return pymnt, nil
-		}
-	}
-	return payment{}, nil
-}
