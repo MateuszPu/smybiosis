@@ -21,27 +21,26 @@ func (service *Service) repository() repository {
 
 func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
 	payment := payment{
-		id:                uuid.New(),
-		currency:          currency,
-		amount:            amount,
-		description:       description,
+		id:          uuid.New(),
+		currency:    currency,
+		amount:      amount,
+		description: description,
 	}
 	err := service.repository().save(payment, userId)
 	return payment.id, err
 }
 
 func (service *Service) GenerateFirstPaymentLink(userId uuid.UUID) {
-	payment, err := service.repository().findPaymentByUserId(userId)
+	payment, err := service.repository().byUserId(userId)
 	if err != nil {
 		//todo; log here
 		return
 	}
 	service.MailService.SendEmailWithPaymentLink(payment.email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkHash.String()))
 }
-
 
 func (service *Service) GeneratePaymentLink(id uuid.UUID) {
-	payment, err := service.repository().findById(id)
+	payment, err := service.repository().byId(id)
 	if err != nil {
 		//todo; log here
 		return
@@ -49,9 +48,17 @@ func (service *Service) GeneratePaymentLink(id uuid.UUID) {
 	service.MailService.SendEmailWithPaymentLink(payment.email, fmt.Sprintf("%spayment/%s", service.GlobalEnv.Host, payment.linkHash.String()))
 }
 
-func (service *Service) createStripePayment(linkId string) paymentData {
+func (service *Service) createStripePayment(linkId string) (paymentData, error) {
 	//TODO: error handling?
-	payment, _ := service.repository().findByLinkHash(linkId)
+	payment, err := service.repository().byLinkHash(linkId)
+	if err != nil {
+		//todo: logger
+		return paymentData{}, err
+	}
+	//if !strings.EqualFold(payment.status, PAYMENT_CREATED) {
+	//	//todo: logger
+	//	return paymentData{}, errors.New("Payment in wrong status")
+	//}
 
 	amount := int64(payment.amount * 100)
 	commission := payment.amount * 100 * 0.005
@@ -77,13 +84,20 @@ func (service *Service) createStripePayment(linkId string) paymentData {
 	}
 
 	params.SetStripeAccount(payment.stripeAccId)
-	//TODO: error handling?
-	s, _ := session.New(params)
+	s, err := session.New(params)
+	if err != nil {
+		//todo: logger
+		return paymentData{}, err
+	}
+	err = service.repository().statusChange(linkId, PAYMENT_INITIALED, s.ID)
+	if err != nil {
+		//todo: logger
+		return paymentData{}, err
+	}
 
 	return paymentData{
 		StripeConnectedAccountId: payment.stripeAccId,
 		StripeClientSecret:       s.ID,
-	}
+	}, nil
 
 }
-

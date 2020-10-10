@@ -34,7 +34,7 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 		usr, err := userService.finishedStripeRegistration(linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
-			context.Redirect(http.StatusNotFound, "/error")
+			context.Redirect(http.StatusFound, "/error")
 			return
 		}
 		t.Execute(context.Writer, nil)
@@ -81,17 +81,20 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			usr, err := userService.createUser(json.Email)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
-				context.Redirect(http.StatusNotFound, "/error")
+				context.Redirect(http.StatusFound, "/error")
 				return
 			}
 			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-				context.Redirect(http.StatusNotFound, "/error")
+				context.Redirect(http.StatusFound, "/error")
 				return
 			}
-			handler.PaymentService.CreatePayment(usr.id, json.Currency, json.Amount, json.Description)
-			context.Redirect(301, link)
+			go func(userId uuid.UUID, json request) {
+				//todo: error handling
+				handler.PaymentService.CreatePayment(userId, json.Currency, json.Amount, json.Description)
+			}(usr.id, json)
+			context.Redirect(http.StatusMovedPermanently, link)
 		}
 
 	}
@@ -105,17 +108,17 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("User not found in database %s", err)
-			context.Redirect(http.StatusSeeOther, "/error")
+			context.Redirect(http.StatusFound, "/error")
 			return
 		}
 
 		link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-			context.Redirect(http.StatusSeeOther, "/error")
+			context.Redirect(http.StatusFound, "/error")
 			return
 		}
-		context.Redirect(301, link)
+		context.Redirect(http.StatusMovedPermanently, link)
 	}
 
 }

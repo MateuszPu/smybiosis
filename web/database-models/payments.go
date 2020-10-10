@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,40 +24,43 @@ import (
 
 // Payment is an object representing the database table.
 type Payment struct {
-	ID            string  `boil:"id" json:"id" toml:"id" yaml:"id"`
-	UserID        string  `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
-	LinkHash      string  `boil:"link_hash" json:"link_hash" toml:"link_hash" yaml:"link_hash"`
-	ConfirmedHash string  `boil:"confirmed_hash" json:"confirmed_hash" toml:"confirmed_hash" yaml:"confirmed_hash"`
-	CanceledHash  string  `boil:"canceled_hash" json:"canceled_hash" toml:"canceled_hash" yaml:"canceled_hash"`
-	Currency      string  `boil:"currency" json:"currency" toml:"currency" yaml:"currency"`
-	Amount        float64 `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
-	Description   string  `boil:"description" json:"description" toml:"description" yaml:"description"`
-	Status        string  `boil:"status" json:"status" toml:"status" yaml:"status"`
+	ID              string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	UserID          string      `boil:"user_id" json:"user_id" toml:"user_id" yaml:"user_id"`
+	LinkHash        string      `boil:"link_hash" json:"link_hash" toml:"link_hash" yaml:"link_hash"`
+	ConfirmedHash   string      `boil:"confirmed_hash" json:"confirmed_hash" toml:"confirmed_hash" yaml:"confirmed_hash"`
+	CanceledHash    string      `boil:"canceled_hash" json:"canceled_hash" toml:"canceled_hash" yaml:"canceled_hash"`
+	Currency        string      `boil:"currency" json:"currency" toml:"currency" yaml:"currency"`
+	StripeIDPayment null.String `boil:"stripe_id_payment" json:"stripe_id_payment,omitempty" toml:"stripe_id_payment" yaml:"stripe_id_payment,omitempty"`
+	Amount          float64     `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
+	Description     string      `boil:"description" json:"description" toml:"description" yaml:"description"`
+	Status          string      `boil:"status" json:"status" toml:"status" yaml:"status"`
 
 	R *paymentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L paymentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PaymentColumns = struct {
-	ID            string
-	UserID        string
-	LinkHash      string
-	ConfirmedHash string
-	CanceledHash  string
-	Currency      string
-	Amount        string
-	Description   string
-	Status        string
+	ID              string
+	UserID          string
+	LinkHash        string
+	ConfirmedHash   string
+	CanceledHash    string
+	Currency        string
+	StripeIDPayment string
+	Amount          string
+	Description     string
+	Status          string
 }{
-	ID:            "id",
-	UserID:        "user_id",
-	LinkHash:      "link_hash",
-	ConfirmedHash: "confirmed_hash",
-	CanceledHash:  "canceled_hash",
-	Currency:      "currency",
-	Amount:        "amount",
-	Description:   "description",
-	Status:        "status",
+	ID:              "id",
+	UserID:          "user_id",
+	LinkHash:        "link_hash",
+	ConfirmedHash:   "confirmed_hash",
+	CanceledHash:    "canceled_hash",
+	Currency:        "currency",
+	StripeIDPayment: "stripe_id_payment",
+	Amount:          "amount",
+	Description:     "description",
+	Status:          "status",
 }
 
 // Generated where
@@ -82,6 +86,29 @@ func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
 		values = append(values, value)
 	}
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
 type whereHelperfloat64 struct{ field string }
@@ -114,25 +141,27 @@ func (w whereHelperfloat64) NIN(slice []float64) qm.QueryMod {
 }
 
 var PaymentWhere = struct {
-	ID            whereHelperstring
-	UserID        whereHelperstring
-	LinkHash      whereHelperstring
-	ConfirmedHash whereHelperstring
-	CanceledHash  whereHelperstring
-	Currency      whereHelperstring
-	Amount        whereHelperfloat64
-	Description   whereHelperstring
-	Status        whereHelperstring
+	ID              whereHelperstring
+	UserID          whereHelperstring
+	LinkHash        whereHelperstring
+	ConfirmedHash   whereHelperstring
+	CanceledHash    whereHelperstring
+	Currency        whereHelperstring
+	StripeIDPayment whereHelpernull_String
+	Amount          whereHelperfloat64
+	Description     whereHelperstring
+	Status          whereHelperstring
 }{
-	ID:            whereHelperstring{field: "\"payments\".\"id\""},
-	UserID:        whereHelperstring{field: "\"payments\".\"user_id\""},
-	LinkHash:      whereHelperstring{field: "\"payments\".\"link_hash\""},
-	ConfirmedHash: whereHelperstring{field: "\"payments\".\"confirmed_hash\""},
-	CanceledHash:  whereHelperstring{field: "\"payments\".\"canceled_hash\""},
-	Currency:      whereHelperstring{field: "\"payments\".\"currency\""},
-	Amount:        whereHelperfloat64{field: "\"payments\".\"amount\""},
-	Description:   whereHelperstring{field: "\"payments\".\"description\""},
-	Status:        whereHelperstring{field: "\"payments\".\"status\""},
+	ID:              whereHelperstring{field: "\"payments\".\"id\""},
+	UserID:          whereHelperstring{field: "\"payments\".\"user_id\""},
+	LinkHash:        whereHelperstring{field: "\"payments\".\"link_hash\""},
+	ConfirmedHash:   whereHelperstring{field: "\"payments\".\"confirmed_hash\""},
+	CanceledHash:    whereHelperstring{field: "\"payments\".\"canceled_hash\""},
+	Currency:        whereHelperstring{field: "\"payments\".\"currency\""},
+	StripeIDPayment: whereHelpernull_String{field: "\"payments\".\"stripe_id_payment\""},
+	Amount:          whereHelperfloat64{field: "\"payments\".\"amount\""},
+	Description:     whereHelperstring{field: "\"payments\".\"description\""},
+	Status:          whereHelperstring{field: "\"payments\".\"status\""},
 }
 
 // PaymentRels is where relationship names are stored.
@@ -156,8 +185,8 @@ func (*paymentR) NewStruct() *paymentR {
 type paymentL struct{}
 
 var (
-	paymentAllColumns            = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "amount", "description", "status"}
-	paymentColumnsWithoutDefault = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "amount", "description", "status"}
+	paymentAllColumns            = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "stripe_id_payment", "amount", "description", "status"}
+	paymentColumnsWithoutDefault = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "stripe_id_payment", "amount", "description", "status"}
 	paymentColumnsWithDefault    = []string{}
 	paymentPrimaryKeyColumns     = []string{"id"}
 )

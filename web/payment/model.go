@@ -7,7 +7,8 @@ import (
 
 const PAYMENT_CREATED = "PAYMENT_CREATED"
 const PAYMENT_INITIALED = "PAYMENT_INITIALED"
-const PAYMENT_DONE = "PAYMENT_DONE"
+const PAYMENT_FINISHED = "PAYMENT_FINISHED"
+const PAYMENT_CANCELED = "PAYMENT_CANCELED"
 
 type payment struct {
 	id            uuid.UUID
@@ -19,6 +20,7 @@ type payment struct {
 	description   string
 	stripeAccId   string
 	email         string
+	status        string
 }
 
 func (p *payment) from(dbPayment *models.Payment, user *models.User) payment {
@@ -27,6 +29,7 @@ func (p *payment) from(dbPayment *models.Payment, user *models.User) payment {
 		linkHash:      uuid.MustParse(dbPayment.LinkHash),
 		confirmedHash: uuid.MustParse(dbPayment.ConfirmedHash),
 		canceledHash:  uuid.MustParse(dbPayment.CanceledHash),
+		status:        dbPayment.Status,
 		currency:      dbPayment.Currency,
 		amount:        dbPayment.Amount,
 		description:   dbPayment.Description,

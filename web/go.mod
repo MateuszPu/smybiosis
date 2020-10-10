@@ -10,6 +10,7 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stripe/stripe-go/v71 v71.48.0
+	github.com/volatiletech/null/v8 v8.1.0
 	github.com/volatiletech/sqlboiler/v4 v4.2.0
 	github.com/volatiletech/strmangle v0.0.1
 )
