@@ -6,15 +6,17 @@ import (
 	"html/template"
 	"net/http"
 	"pay.me/v4/payment"
+	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
 	"regexp"
 	"strconv"
 )
 
 type Handler struct {
-	BaseSever      *server.BaseSever
-	PaymentService *payment.Service
-	Service        *Service
+	BaseSever       *server.BaseSever
+	PaymentService  *payment.Service
+	Service         *Service
+	PaymentProvider *payprovider.Service
 }
 
 func (handler *Handler) Routes() *Handler {
@@ -22,28 +24,6 @@ func (handler *Handler) Routes() *Handler {
 	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
 	handler.BaseSever.Router.GET("/confirm/:id", handler.finishRegistration())
 	return handler
-}
-
-
-func (handler *Handler) finishRegistration() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/finish.html"))
-	return func(context *gin.Context) {
-		handler.BaseSever.Logger.Infof("Registration finished for %s", context.Param("id"))
-		linkId := context.Param("id")
-		usr, err := handler.Service.finishedStripeRegistration(linkId)
-
-		if err != nil {
-			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
-			context.Redirect(http.StatusFound, "/404")
-			return
-		}
-		t.Execute(context.Writer, nil)
-		go func(userId uuid.UUID) {
-			handler.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())
-			handler.PaymentService.GenerateFirstPaymentLink(userId)
-		}(usr.id)
-
-	}
 }
 
 func (handler *Handler) createUser() gin.HandlerFunc {
@@ -80,18 +60,27 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			handler.PaymentService.GeneratePaymentLink(paymentId)
 			context.Redirect(http.StatusMovedPermanently, "/")
 		} else {
-			usr, err := handler.Service.createUser(json.Email)
+			stripeAccId, err := handler.PaymentProvider.CreateUserInStripe(json.Email)
+			if err != nil {
+				handler.BaseSever.Logger.Errorf("Error while creating user in stripe %s", err)
+				context.Redirect(http.StatusFound, "/404")
+				return
+			}
+
+			usr, err := handler.Service.createUser(json.Email, stripeAccId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
 				context.Redirect(http.StatusFound, "/404")
 				return
 			}
-			link, err := handler.Service.stripeLink(usr.stripeId, usr.linkId)
+
+			link, err := handler.PaymentProvider.StripeRegistrationLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
 				context.Redirect(http.StatusFound, "/404")
 				return
 			}
+
 			go func(userId uuid.UUID, json request) {
 				//todo: error handling
 				handler.PaymentService.CreatePayment(userId, json.Currency, json.Amount, json.Description)
@@ -114,7 +103,7 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 			return
 		}
 
-		link, err := handler.Service.stripeLink(usr.stripeId, usr.linkId)
+		link, err := handler.PaymentProvider.StripeRegistrationLink(usr.stripeId, usr.linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
 			context.Redirect(http.StatusFound, "/404")
@@ -123,4 +112,26 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 		context.Redirect(http.StatusMovedPermanently, link)
 	}
 
+}
+
+
+func (handler *Handler) finishRegistration() gin.HandlerFunc {
+	t := template.Must(template.ParseFiles("templates/finish.html"))
+	return func(context *gin.Context) {
+		handler.BaseSever.Logger.Infof("Registration finished for %s", context.Param("id"))
+		linkId := context.Param("id")
+		usr, err := handler.Service.finishedStripeRegistration(linkId)
+
+		if err != nil {
+			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
+			context.Redirect(http.StatusFound, "/404")
+			return
+		}
+		t.Execute(context.Writer, nil)
+		go func(userId uuid.UUID) {
+			handler.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())
+			handler.PaymentService.GenerateFirstPaymentLink(userId)
+		}(usr.id)
+
+	}
 }

@@ -19,6 +19,7 @@ func (base *BaseSever) ApiGroup() *gin.RouterGroup {
 type Env struct {
 	Env  string
 	Host string
+	StripeKey string
 }
 
 func EnvVariable(key, defaultValue string) string {

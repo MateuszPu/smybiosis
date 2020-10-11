@@ -3,15 +3,15 @@ package payment
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/stripe/stripe-go/v71"
-	"github.com/stripe/stripe-go/v71/checkout/session"
 	"pay.me/v4/mail"
+	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
 )
 
 type Service struct {
 	Repository  repository
 	MailService *mail.Service
+	PaymentProvider *payprovider.Service
 	GlobalEnv   *server.Env
 }
 
@@ -61,37 +61,15 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 			StripeClientSecret:       payment.stripeIdPayment,
 		}, nil
 	}
-
 	amount := int64(payment.amount * 100)
-	commission := payment.amount * 100 * 0.005
-	params := &stripe.CheckoutSessionParams{
-		PaymentMethodTypes: stripe.StringSlice([]string{
-			string(stripe.PaymentMethodTypeCard),
-		}),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{
-				Name:     stripe.String(payment.description),
-				Amount:   stripe.Int64(amount),
-				Currency: stripe.String(string(stripe.CurrencyPLN)),
-				Quantity: stripe.Int64(1),
-			},
-		},
-		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
-			ApplicationFeeAmount: stripe.Int64(int64(commission)),
-		},
-		//todo: implement two pages for this finished will mark payment as done
-		//todo: canceled will ask user do you realy want cancel or you want to back there?
-		SuccessURL: stripe.String(fmt.Sprintf("%spayment/finished/%s", service.GlobalEnv.Host, payment.confirmedHash)),
-		CancelURL:  stripe.String(fmt.Sprintf("%spayment/canceled/%s", service.GlobalEnv.Host, payment.canceledHash)),
-	}
+	commission := int64(payment.amount * 100 * 0.005)
+	id, err := service.PaymentProvider.CreatePayment(amount, commission, payment.description, payment.stripeAccId, payment.confirmedHash.String(), payment.canceledHash.String())
 
-	params.SetStripeAccount(payment.stripeAccId)
-	s, err := session.New(params)
 	if err != nil {
 		//todo: logger
 		return paymentData{}, err
 	}
-	err = service.Repository.statusChange(linkId, PAYMENT_INITIALED, s.ID)
+	err = service.Repository.statusChange(linkId, PAYMENT_INITIALED, id)
 	if err != nil {
 		//todo: logger
 		return paymentData{}, err
@@ -99,7 +77,7 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 
 	return paymentData{
 		StripeConnectedAccountId: payment.stripeAccId,
-		StripeClientSecret:       s.ID,
+		StripeClientSecret:       id,
 	}, nil
 
 }
