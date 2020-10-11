@@ -8,6 +8,7 @@ import (
 	"pay.me/v4/payment"
 	"pay.me/v4/server"
 	"regexp"
+	"strconv"
 )
 
 type Handler struct {
@@ -17,9 +18,8 @@ type Handler struct {
 }
 
 func (handler *Handler) Routes() *Handler {
-	authGr := handler.BaseSever.ApiGroup().Group("/user")
-	authGr.POST("", handler.createUser())
-
+	//authGr := handler.BaseSever.ApiGroup().Group("/user")
+	handler.BaseSever.Router.POST("/user", handler.createUser())
 	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
 	handler.BaseSever.Router.GET("/confirm/:id", handler.finishRegistration())
 	return handler
@@ -34,7 +34,7 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 		usr, err := userService.finishedStripeRegistration(linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
-			context.Redirect(http.StatusFound, "/error")
+			context.Redirect(http.StatusFound, "/404")
 			return
 		}
 		t.Execute(context.Writer, nil)
@@ -55,11 +55,12 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 	}
 
 	return func(context *gin.Context) {
-		var json request
-		if err := context.ShouldBindJSON(&json); err != nil {
-			handler.BaseSever.Logger.Errorf("Error while parsing json %s", err)
-			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "error during parsing json"})
-			return
+		amount, _ := strconv.ParseFloat(context.PostForm("amount"), 64)
+		json := request{
+			Email:       context.PostForm("email"),
+			Amount:      amount,
+			Currency:    context.PostForm("currency"),
+			Description: context.PostForm("description"),
 		}
 		re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 		if !re.MatchString(json.Email) {
@@ -77,17 +78,18 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 				//todo: log here
 			}
 			handler.PaymentService.GeneratePaymentLink(paymentId)
+			context.Redirect(http.StatusMovedPermanently, "/")
 		} else {
 			usr, err := userService.createUser(json.Email)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
-				context.Redirect(http.StatusFound, "/error")
+				context.Redirect(http.StatusFound, "/404")
 				return
 			}
 			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-				context.Redirect(http.StatusFound, "/error")
+				context.Redirect(http.StatusFound, "/404")
 				return
 			}
 			go func(userId uuid.UUID, json request) {
@@ -108,14 +110,14 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("User not found in database %s", err)
-			context.Redirect(http.StatusFound, "/error")
+			context.Redirect(http.StatusFound, "/404")
 			return
 		}
 
 		link, err := userService.stripeLink(usr.stripeId, usr.linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
-			context.Redirect(http.StatusFound, "/error")
+			context.Redirect(http.StatusFound, "/404")
 			return
 		}
 		context.Redirect(http.StatusMovedPermanently, link)

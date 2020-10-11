@@ -59,6 +59,12 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 	//	//todo: logger
 	//	return paymentData{}, errors.New("Payment in wrong status")
 	//}
+	if payment.stripeIdPayment != "" {
+		return paymentData{
+			StripeConnectedAccountId: payment.stripeAccId,
+			StripeClientSecret:       payment.stripeIdPayment,
+		}, nil
+	}
 
 	amount := int64(payment.amount * 100)
 	commission := payment.amount * 100 * 0.005

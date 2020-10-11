@@ -24,7 +24,7 @@ func (handler *Handler) paymentLink() gin.HandlerFunc {
 		data, err := handler.Service.createStripePayment(param)
 		if err != nil {
 			//todo: logger
-			context.Redirect(http.StatusFound, "/error")
+			context.Redirect(http.StatusFound, "/404")
 		}
 		t.Execute(context.Writer, data)
 	}

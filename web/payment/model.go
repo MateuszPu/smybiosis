@@ -11,30 +11,32 @@ const PAYMENT_FINISHED = "PAYMENT_FINISHED"
 const PAYMENT_CANCELED = "PAYMENT_CANCELED"
 
 type payment struct {
-	id            uuid.UUID
-	linkHash      uuid.UUID
-	confirmedHash uuid.UUID
-	canceledHash  uuid.UUID
-	currency      string
-	amount        float64
-	description   string
-	stripeAccId   string
-	email         string
-	status        string
+	id              uuid.UUID
+	linkHash        uuid.UUID
+	confirmedHash   uuid.UUID
+	canceledHash    uuid.UUID
+	currency        string
+	amount          float64
+	description     string
+	stripeAccId     string
+	stripeIdPayment string
+	email           string
+	status          string
 }
 
 func (p *payment) from(dbPayment *models.Payment, user *models.User) payment {
 	return payment{
-		id:            uuid.MustParse(dbPayment.ID),
-		linkHash:      uuid.MustParse(dbPayment.LinkHash),
-		confirmedHash: uuid.MustParse(dbPayment.ConfirmedHash),
-		canceledHash:  uuid.MustParse(dbPayment.CanceledHash),
-		status:        dbPayment.Status,
-		currency:      dbPayment.Currency,
-		amount:        dbPayment.Amount,
-		description:   dbPayment.Description,
-		stripeAccId:   user.StripeAccount,
-		email:         user.Email,
+		id:              uuid.MustParse(dbPayment.ID),
+		linkHash:        uuid.MustParse(dbPayment.LinkHash),
+		confirmedHash:   uuid.MustParse(dbPayment.ConfirmedHash),
+		canceledHash:    uuid.MustParse(dbPayment.CanceledHash),
+		status:          dbPayment.Status,
+		currency:        dbPayment.Currency,
+		amount:          dbPayment.Amount,
+		description:     dbPayment.Description,
+		stripeAccId:     user.StripeAccount,
+		stripeIdPayment: dbPayment.StripeIDPayment.String,
+		email:           user.Email,
 	}
 }
 

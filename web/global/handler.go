@@ -11,12 +11,20 @@ type Handler struct {
 }
 
 func (handler *Handler) Routes() *Handler {
-	handler.BaseServer.Router.GET("/error", handler.error())
+	handler.BaseServer.Router.GET("/404", handler.error())
+	handler.BaseServer.Router.GET("/", handler.index())
 	return handler
 }
 
 func (handler *Handler) error() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/error.html"))
+	t := template.Must(template.ParseFiles("templates/404.html"))
+	return func(context *gin.Context) {
+		t.Execute(context.Writer, nil)
+	}
+}
+
+func (handler *Handler) index() gin.HandlerFunc {
+	t := template.Must(template.ParseFiles("templates/index.html"))
 	return func(context *gin.Context) {
 		t.Execute(context.Writer, nil)
 	}
