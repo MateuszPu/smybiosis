@@ -10,13 +10,9 @@ import (
 )
 
 type Service struct {
-	Repository  *repository
+	Repository  repository
 	MailService *mail.Service
 	GlobalEnv   *server.Env
-}
-
-func (service *Service) repository() repository {
-	return *service.Repository
 }
 
 func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
@@ -26,12 +22,12 @@ func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount 
 		amount:      amount,
 		description: description,
 	}
-	err := service.repository().save(payment, userId)
+	err := service.Repository.save(payment, userId)
 	return payment.id, err
 }
 
 func (service *Service) GenerateFirstPaymentLink(userId uuid.UUID) {
-	payment, err := service.repository().byUserId(userId)
+	payment, err := service.Repository.byUserId(userId)
 	if err != nil {
 		//todo; log here
 		return
@@ -40,7 +36,7 @@ func (service *Service) GenerateFirstPaymentLink(userId uuid.UUID) {
 }
 
 func (service *Service) GeneratePaymentLink(id uuid.UUID) {
-	payment, err := service.repository().byId(id)
+	payment, err := service.Repository.byId(id)
 	if err != nil {
 		//todo; log here
 		return
@@ -50,7 +46,7 @@ func (service *Service) GeneratePaymentLink(id uuid.UUID) {
 
 func (service *Service) createStripePayment(linkId string) (paymentData, error) {
 	//TODO: error handling?
-	payment, err := service.repository().byLinkHash(linkId)
+	payment, err := service.Repository.byLinkHash(linkId)
 	if err != nil {
 		//todo: logger
 		return paymentData{}, err
@@ -95,7 +91,7 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 		//todo: logger
 		return paymentData{}, err
 	}
-	err = service.repository().statusChange(linkId, PAYMENT_INITIALED, s.ID)
+	err = service.Repository.statusChange(linkId, PAYMENT_INITIALED, s.ID)
 	if err != nil {
 		//todo: logger
 		return paymentData{}, err

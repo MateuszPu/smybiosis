@@ -18,20 +18,20 @@ type Handler struct {
 }
 
 func (handler *Handler) Routes() *Handler {
-	//authGr := handler.BaseSever.ApiGroup().Group("/user")
 	handler.BaseSever.Router.POST("/user", handler.createUser())
 	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
 	handler.BaseSever.Router.GET("/confirm/:id", handler.finishRegistration())
 	return handler
 }
 
+
 func (handler *Handler) finishRegistration() gin.HandlerFunc {
 	t := template.Must(template.ParseFiles("templates/finish.html"))
 	return func(context *gin.Context) {
+		handler.BaseSever.Logger.Infof("Registration finished for %s", context.Param("id"))
 		linkId := context.Param("id")
-		handler.BaseSever.Logger.Infof("Registration finished for %s", linkId)
-		userService := *handler.Service
-		usr, err := userService.finishedStripeRegistration(linkId)
+		usr, err := handler.Service.finishedStripeRegistration(linkId)
+
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
 			context.Redirect(http.StatusFound, "/404")
@@ -64,12 +64,12 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 		}
 		re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 		if !re.MatchString(json.Email) {
+			//todo: error handling
 			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "Login should be valid email"})
 			return
 		}
-		userService := *handler.Service
 
-		user, _ := userService.findByEmail(json.Email)
+		user, _ := handler.Service.findByEmail(json.Email)
 		if user.email == json.Email {
 			//it means user alread exist in database send link to him
 			//TODO: deal with situation when user was found but not finish registration process
@@ -80,13 +80,13 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			handler.PaymentService.GeneratePaymentLink(paymentId)
 			context.Redirect(http.StatusMovedPermanently, "/")
 		} else {
-			usr, err := userService.createUser(json.Email)
+			usr, err := handler.Service.createUser(json.Email)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while saving user in database %s", err)
 				context.Redirect(http.StatusFound, "/404")
 				return
 			}
-			link, err := userService.stripeLink(usr.stripeId, usr.linkId)
+			link, err := handler.Service.stripeLink(usr.stripeId, usr.linkId)
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
 				context.Redirect(http.StatusFound, "/404")
@@ -96,6 +96,7 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 				//todo: error handling
 				handler.PaymentService.CreatePayment(userId, json.Currency, json.Amount, json.Description)
 			}(usr.id, json)
+
 			context.Redirect(http.StatusMovedPermanently, link)
 		}
 
@@ -104,9 +105,8 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 
 func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		userService := *handler.Service
 		linkId := context.Param("id")
-		usr, err := userService.findByLinkId(linkId)
+		usr, err := handler.Service.findByLinkId(linkId)
 
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("User not found in database %s", err)
@@ -114,7 +114,7 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 			return
 		}
 
-		link, err := userService.stripeLink(usr.stripeId, usr.linkId)
+		link, err := handler.Service.stripeLink(usr.stripeId, usr.linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
 			context.Redirect(http.StatusFound, "/404")

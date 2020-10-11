@@ -50,9 +50,8 @@ func main() {
 		Password: server.EnvVariable("MAIL_PASSWORD", "pass"),
 	}
 
-	repo := payment.CreateSqlRepo(db)
 	paymentService := payment.Service{
-		Repository:  &repo,
+		Repository:  payment.CreateSqlRepo(db),
 		GlobalEnv:   &env,
 		MailService: &service}
 	globalHandler(&baseServer)
