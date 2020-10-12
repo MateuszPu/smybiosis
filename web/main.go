@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
-	"github.com/volatiletech/sqlboiler/v4/boil"
+	"pay.me/v4/database"
 	"pay.me/v4/global"
 	"pay.me/v4/logging"
 	"pay.me/v4/mail"
@@ -16,17 +16,6 @@ import (
 )
 
 func main() {
-	db, _ := sql.Open("postgres", "dbname=postgres host=localhost user=user password=pass sslmode=disable")
-	//if err1 != nil {
-	//	println("a")
-	//}
-	//err2 := db.Ping()
-	//if err2 != nil {
-	//	println("a")
-	//}
-	boil.SetDB(db)
-	boil.DebugMode = true
-
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
@@ -37,14 +26,22 @@ func main() {
 		Host:      server.EnvVariable("HOST", "http://localhost:8080/"),
 		StripeKey: server.EnvVariable("STRIPE_KEY", "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"),
 	}
-	s := payprovider.Service{Env: &env}
-	paymentProvider := s.Init()
-
+	paymentProvider := payprovider.Service{Env: &env}.Init()
 	baseServer := server.BaseSever{
 		Router: router,
 		Env:    &env,
 		Logger: logging.Logger(env.Env),
 	}
+
+	db := database.SqlDatabase{
+		DriverName: server.EnvVariable("DB_DRIVER", "postgres"),
+		Name:       server.EnvVariable("DB_NAME", "postgres"),
+		Host:       server.EnvVariable("DB_HOST", "localhost"),
+		User:       server.EnvVariable("DB_USER", "user"),
+		Password:   server.EnvVariable("DB_PASSWORD", "pass"),
+		Logger:     baseServer.Logger,
+	}.CreateDb()
+
 	service := mail.Service{
 		Host:     server.EnvVariable("MAIL_HOST", "some"),
 		Port:     server.EnvVariable("MAIL_PORT", "port"),

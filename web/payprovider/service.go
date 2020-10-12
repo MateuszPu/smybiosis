@@ -13,9 +13,9 @@ type Service struct {
 	Env *server.Env
 }
 
-func (service *Service) Init() *Service {
+func (service Service) Init() *Service {
 	stripe.Key = service.Env.StripeKey
-	return service
+	return &service
 }
 
 func (service *Service) CreateUserInStripe(email string) (string, error) {
