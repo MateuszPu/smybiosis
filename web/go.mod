@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/jordan-wright/email v4.0.1-0.20200917010138-e1c00e156980+incompatible
 	github.com/lib/pq v1.8.0
+	github.com/stretchr/testify v1.5.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stripe/stripe-go/v71 v71.48.0
 	github.com/volatiletech/null/v8 v8.1.0
