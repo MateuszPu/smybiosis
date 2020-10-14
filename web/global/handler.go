@@ -3,7 +3,9 @@ package global
 import (
 	"github.com/gin-gonic/gin"
 	"html/template"
+	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
+	"strings"
 )
 
 type Handler struct {
@@ -25,7 +27,15 @@ func (handler *Handler) error() gin.HandlerFunc {
 
 func (handler *Handler) index() gin.HandlerFunc {
 	t := template.Must(template.ParseFiles("templates/index.html"))
+	type data struct {
+		Currencies []string
+	}
 	return func(context *gin.Context) {
-		t.Execute(context.Writer, nil)
+		currencies := []string{}
+		for _, currency := range payprovider.AllCurrencies() {
+			currencies = append(currencies, strings.ToUpper(currency.Value))
+		}
+		d := data{currencies}
+		t.Execute(context.Writer, d)
 	}
 }

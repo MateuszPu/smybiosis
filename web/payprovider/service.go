@@ -7,6 +7,7 @@ import (
 	"github.com/stripe/stripe-go/v71/accountlink"
 	"github.com/stripe/stripe-go/v71/checkout/session"
 	"pay.me/v4/server"
+	"strings"
 )
 
 type Service struct {
@@ -47,7 +48,7 @@ func (service *Service) StripeRegistrationLink(stripeAccId string, linkId string
 	return newAcc.URL, nil
 }
 
-func (service *Service) CreatePayment(amount int64, commission int64, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error) {
+func (service *Service) CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error) {
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{
 			string(stripe.PaymentMethodTypeCard),
@@ -56,7 +57,7 @@ func (service *Service) CreatePayment(amount int64, commission int64, descriptio
 			{
 				Name:     stripe.String(description),
 				Amount:   stripe.Int64(amount),
-				Currency: stripe.String(string(stripe.CurrencyPLN)),
+				Currency: stripe.String(strings.ToLower(currency)),
 				Quantity: stripe.Int64(1),
 			},
 		},

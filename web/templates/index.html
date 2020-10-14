@@ -11,9 +11,13 @@
 
     <label for="amount">Amount:</label><br>
     <input type="text" id="amount" name="amount"><br>
-
     <label for="currency">Currency:</label><br>
-    <input type="text" id="currency" name="currency"><br>
+    <select name="currency" id="currency">
+        {{range $val := .Currencies}}
+            <option value="{{$val}}">{{$val}}</option>
+        {{end}}
+    </select>
+    <br>
 
     <label for="description">Description:</label><br>
     <input type="text" id="description" name="description"><br>

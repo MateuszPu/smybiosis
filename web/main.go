@@ -53,6 +53,7 @@ func main() {
 		Repository:      payment.CreateSqlRepo(db),
 		GlobalEnv:       &env,
 		PaymentProvider: paymentProvider,
+		Commission:      0.005,
 		MailService:     &service}
 	globalHandler(&baseServer)
 	userHandlers(&baseServer, &paymentService, paymentProvider, db)

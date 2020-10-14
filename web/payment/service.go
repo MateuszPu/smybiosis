@@ -6,13 +6,15 @@ import (
 	"pay.me/v4/mail"
 	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
+	"strings"
 )
 
 type Service struct {
-	Repository  repository
-	MailService *mail.Service
+	Repository      repository
+	MailService     *mail.Service
 	PaymentProvider *payprovider.Service
-	GlobalEnv   *server.Env
+	GlobalEnv       *server.Env
+	Commission      float64
 }
 
 func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
@@ -61,9 +63,10 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 			StripeClientSecret:       payment.stripeIdPayment,
 		}, nil
 	}
-	amount := int64(payment.amount * 100)
-	commission := int64(payment.amount * 100 * 0.005)
-	id, err := service.PaymentProvider.CreatePayment(amount, commission, payment.description, payment.stripeAccId, payment.confirmedHash.String(), payment.canceledHash.String())
+	currency := payprovider.AllCurrencies()[strings.ToLower(payment.currency)]
+
+	amount, commission := currency.CalculatePayment(payment.amount, service.Commission)
+	id, err := service.PaymentProvider.CreatePayment(amount, commission, payment.currency, payment.description, payment.stripeAccId, payment.confirmedHash.String(), payment.canceledHash.String())
 
 	if err != nil {
 		//todo: logger
