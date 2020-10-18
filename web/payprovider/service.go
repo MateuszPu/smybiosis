@@ -10,16 +10,22 @@ import (
 	"strings"
 )
 
-type Service struct {
+type PaymentProvider interface {
+	CreateUser(email string) (string, error)
+	RegistrationLink(externalAccId string, linkId string) (string, error)
+	CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error)
+}
+
+type StripeProvider struct {
 	Env *server.Env
 }
 
-func (service Service) Init() *Service {
+func (service StripeProvider) Init() PaymentProvider {
 	stripe.Key = service.Env.StripeKey
-	return &service
+	return service
 }
 
-func (service *Service) CreateUserInStripe(email string) (string, error) {
+func (service StripeProvider) CreateUser(email string) (string, error) {
 	params := &stripe.AccountParams{
 		Type:  stripe.String(string(stripe.AccountTypeStandard)),
 		Email: stripe.String(email),
@@ -31,11 +37,11 @@ func (service *Service) CreateUserInStripe(email string) (string, error) {
 	return acc.ID, nil
 }
 
-func (service *Service) StripeRegistrationLink(stripeAccId string, linkId string) (string, error) {
+func (service StripeProvider) RegistrationLink(externalAccId string, linkId string) (string, error) {
 	refreshUrl := fmt.Sprintf("%srefresh/%s", service.Env.Host, linkId)
 	returnUrl := fmt.Sprintf("%sconfirm/%s", service.Env.Host, linkId)
 	par := &stripe.AccountLinkParams{
-		Account:    stripe.String(stripeAccId),
+		Account:    stripe.String(externalAccId),
 		RefreshURL: stripe.String(refreshUrl),
 		ReturnURL:  stripe.String(returnUrl),
 		Type:       stripe.String(string(stripe.AccountLinkTypeAccountOnboarding)),
@@ -48,7 +54,7 @@ func (service *Service) StripeRegistrationLink(stripeAccId string, linkId string
 	return newAcc.URL, nil
 }
 
-func (service *Service) CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error) {
+func (service StripeProvider) CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error) {
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{
 			string(stripe.PaymentMethodTypeCard),

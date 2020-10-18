@@ -12,12 +12,16 @@ import (
 type Service struct {
 	Repository      repository
 	MailService     *mail.Service
-	PaymentProvider *payprovider.Service
+	PaymentProvider *payprovider.PaymentProvider
 	GlobalEnv       *server.Env
 	Commission      float64
 }
 
-func (service *Service) CreatePayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
+func (service *Service) paymentProvider() payprovider.PaymentProvider {
+	return *service.PaymentProvider
+}
+
+func (service *Service) InitPayment(userId uuid.UUID, currency string, amount float64, description string) (uuid.UUID, error) {
 	payment := payment{
 		id:          uuid.New(),
 		currency:    currency,
@@ -66,7 +70,7 @@ func (service *Service) createStripePayment(linkId string) (paymentData, error) 
 	currency := payprovider.AllCurrencies()[strings.ToLower(payment.currency)]
 
 	amount, commission := currency.CalculatePayment(payment.amount, service.Commission)
-	id, err := service.PaymentProvider.CreatePayment(amount, commission, payment.currency, payment.description, payment.stripeAccId, payment.confirmedHash.String(), payment.canceledHash.String())
+	id, err := service.paymentProvider().CreatePayment(amount, commission, payment.currency, payment.description, payment.stripeAccId, payment.confirmedHash.String(), payment.canceledHash.String())
 
 	if err != nil {
 		//todo: logger

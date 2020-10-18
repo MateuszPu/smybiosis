@@ -26,7 +26,8 @@ func main() {
 		Host:      server.EnvVariable("HOST", "http://localhost:8080/"),
 		StripeKey: server.EnvVariable("STRIPE_KEY", "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"),
 	}
-	paymentProvider := payprovider.Service{Env: &env}.Init()
+	stripeProvider := payprovider.StripeProvider{Env: &env}.Init()
+
 	baseServer := server.BaseSever{
 		Router: router,
 		Env:    &env,
@@ -52,11 +53,11 @@ func main() {
 	paymentService := payment.Service{
 		Repository:      payment.CreateSqlRepo(db),
 		GlobalEnv:       &env,
-		PaymentProvider: paymentProvider,
+		PaymentProvider: &stripeProvider,
 		Commission:      0.005,
 		MailService:     &service}
 	globalHandler(&baseServer)
-	userHandlers(&baseServer, &paymentService, paymentProvider, db)
+	userHandlers(&baseServer, &paymentService, &stripeProvider, db)
 	paymentHandlers(&baseServer, &paymentService)
 
 	router.Run(":8080")
@@ -69,14 +70,13 @@ func globalHandler(srv *server.BaseSever) {
 	globalHandler.Routes()
 }
 
-func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service, paymentProvider *payprovider.Service, db *sql.DB) {
+func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service, paymentProvider *payprovider.PaymentProvider, db *sql.DB) {
 	repo := user.CreateSqlRepo(db)
-	service := user.Service{Repository: &repo, Env: baseServer.Env}
+	service := user.Service{Repository: &repo, Env: baseServer.Env, PaymentProvider: paymentProvider}
 	userHandler := user.Handler{
 		BaseSever:       baseServer,
-		Service:         &service,
+		UserService:     &service,
 		PaymentService:  paymentService,
-		PaymentProvider: paymentProvider,
 	}
 	userHandler.Routes()
 }
