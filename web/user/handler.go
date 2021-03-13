@@ -38,7 +38,7 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			Email:       context.PostForm("email"),
 			Amount:      amount,
 			Currency:    context.PostForm("currency"),
-			Description: context.PostForm("description"),
+			Description: context.PostForm("title"),
 		}
 		re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 		if !re.MatchString(json.Email) {

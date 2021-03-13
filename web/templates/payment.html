@@ -7,5 +7,5 @@ var stripe = Stripe('pk_test_51HTA7JDx7zNNd5t3LFt7S0IVoFOZunDoSTi98VwRcppQ4k9VeD
   stripeAccount: "{{ .StripeConnectedAccountId }}"
 });
 stripe.redirectToCheckout({sessionId: '{{ .StripeClientSecret }}'});
-4</script>
+</script>
 </form>

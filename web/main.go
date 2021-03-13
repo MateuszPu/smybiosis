@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
+	"net/http"
 	"pay.me/v4/database"
 	"pay.me/v4/global"
 	"pay.me/v4/logging"
@@ -17,6 +18,8 @@ import (
 
 func main() {
 	router := gin.New()
+	router.StaticFS("/assets", http.Dir("templates/assets"))
+	router.StaticFS("/js", http.Dir("templates/js"))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Use(requestLogger())
@@ -38,7 +41,7 @@ func main() {
 		DriverName: server.EnvVariable("DB_DRIVER", "postgres"),
 		Name:       server.EnvVariable("DB_NAME", "postgres"),
 		Host:       server.EnvVariable("DB_HOST", "localhost"),
-		User:       server.EnvVariable("DB_USER", "user"),
+		User:       server.EnvVariable("DB_USER", "postgres"),
 		Password:   server.EnvVariable("DB_PASSWORD", "pass"),
 		Logger:     baseServer.Logger,
 	}.CreateDb()

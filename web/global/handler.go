@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
+	"sort"
 	"strings"
 )
 
@@ -33,8 +34,12 @@ func (handler *Handler) index() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		currencies := []string{}
 		for _, currency := range payprovider.AllCurrencies() {
+			if currency.Value == "USD" || currency.Value == "EUR" || currency.Value == "GBP" {
+				continue
+			}
 			currencies = append(currencies, strings.ToUpper(currency.Value))
 		}
+		sort.Strings(currencies)
 		d := data{currencies}
 		t.Execute(context.Writer, d)
 	}
