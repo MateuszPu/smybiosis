@@ -1,0 +1,93 @@
+.background-image {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: -1;
+
+  &.z-index-2 {
+    z-index: -2;
+  }
+
+  &.left {
+    right: unset;
+    left: 0;
+  }
+
+  &.bottom {
+    top: unset;
+    bottom: 0;
+  }
+
+  &.b-150 {
+    top: unset;
+    bottom: -150px;
+  }
+
+  &.b-200 {
+    top: unset;
+    bottom: -200px;
+  }
+
+  &.t-200 {
+    top: -200px;
+  }
+
+  &.t-150 {
+    top: -150px;
+  }
+
+  &.t-130 {
+    top: -130px;
+  }
+
+  &.t100 {
+    top: 100px;
+  }
+
+  &.t-100 {
+    top: -100px;
+  }
+
+  &.r-10 {
+    right: -10px;
+  }
+
+  &.l10 {
+    left: 10px;
+  }
+
+  &.l-100 {
+    left: -100px;
+  }
+
+  &.l-150 {
+    left: -150px;
+  }
+
+  &.r-150 {
+    left: unset;
+    right: -150px;
+  }
+}
+
+.with-images {
+  overflow: hidden;
+  position: relative;
+}
+
+.with-images.o-visible {
+  overflow: visible;
+}
+
+@media (max-width: 991px) {
+  &.lg-and-down-t-125 {
+    top: -125px;
+  }
+}
+
+@media (max-width: 1200px) {
+  &.lg-and-down-p-static {
+    position: static;
+  }
+}

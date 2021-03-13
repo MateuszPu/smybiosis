@@ -1,0 +1,607 @@
+// Override Bootstrap's Sass default variables
+//
+// Nearly all variables in Bootstrap are written with the `!default` flag.
+// This allows you to override the default values of those variables before
+// you import Bootstrap's source Sass files.
+//
+// Overriding the default variable values is the best way to customize your
+// CSS without writing _new_ styles. For example, change you can either change
+// `$body-color` or write more CSS that override's Bootstrap's CSS like so:
+// `body { color: red; }`.
+
+//
+// Override Bootstrap here
+//
+
+// Toggle global options
+$enable-gradients: true;
+$enable-shadows: true;
+
+// Customize some defaults
+$body-color: #000;
+$body-bg: #fff;
+$border-radius: 4px;
+
+$theme-colors: (
+  "primary": #1abc9c,
+  "secondary": #2d4379,
+  "accent": #0083ff,
+  "danger": #ff4136
+);
+
+//
+// Bring in Bootstrap
+//
+
+// Option 1
+//
+// Import all of Bootstrap's CSS
+
+// @import "bootstrap/scss/bootstrap";
+
+// Option 2
+//
+// Import just the styles you need. Note that some stylesheets are required no matter what.
+
+@import "bootstrap/scss/functions"; // Required
+@import "bootstrap/scss/variables"; // Required
+@import "bootstrap/scss/mixins"; // Required
+// @import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot"; // Required
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+// @import "bootstrap/scss/code";
+@import "bootstrap/scss/grid";
+// @import "bootstrap/scss/tables";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/dropdown";
+// @import "bootstrap/scss/button-group";
+// @import "bootstrap/scss/input-group"; // Requires forms
+@import "bootstrap/scss/custom-forms";
+@import "bootstrap/scss/nav";
+@import "bootstrap/scss/navbar"; // Requires nav
+// @import "bootstrap/scss/card";
+// @import "bootstrap/scss/breadcrumb";
+// @import "bootstrap/scss/pagination";
+// @import "bootstrap/scss/badge";
+// @import "bootstrap/scss/jumbotron";
+// @import "bootstrap/scss/alert";
+// @import "bootstrap/scss/progress";
+// @import "bootstrap/scss/media";
+@import "bootstrap/scss/list-group";
+@import "bootstrap/scss/close";
+// @import "bootstrap/scss/toasts";
+@import "bootstrap/scss/modal"; // Requires transitions
+// @import "bootstrap/scss/tooltip";
+// @import "bootstrap/scss/popover";
+// @import "bootstrap/scss/carousel";
+// @import "bootstrap/scss/spinners";
+@import "bootstrap/scss/utilities";
+// @import "bootstrap/scss/print";
+
+@import './vendor/floating-labels/bootstrap-floating-label';
+@import './images';
+
+.bg-light {
+  background-color: $body-bg !important;
+}
+
+.bg-dark {
+  background-color: #f2f2f2 !important;
+}
+
+//
+// Custom styles
+//
+
+body {
+  font-family: 'Inter', sans-serif;
+  padding-bottom: 0;
+  color: #5a5a5a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.btn-primary {
+  border-radius: 4px;
+  padding: 16px 40px;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 24px;
+}
+
+// Style Bootstrap icons
+.bi {
+  fill: currentColor;
+}
+
+input.form-control {
+  padding: 16px 0;
+}
+
+select.form-control,
+input.form-control {
+  border: none;
+  border-bottom: 2px solid #000;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 48px;
+  position: relative;
+}
+
+.select-caret {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+select:focus + label + .select-caret path {
+  fill: #0083ff;
+}
+
+select.form-control {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.step-arrow-container {
+  position: relative;
+
+  .step-arrow {
+    top: 65px;
+    right: 0;
+    transform: translate(50%, -50%);
+    position: absolute;
+    z-index: 1;
+  }
+
+  .step-arrow-1 {
+    top: 25px;
+  }
+}
+
+/* GLOBAL STYLES
+--------------------------------------------------
+Padding below the footer and lighter body text */
+
+.relative {
+  position: relative;
+}
+
+.card {
+  background: #fff;
+  box-shadow: 0 64px 71px -5px rgba(45, 67, 121, 0.06);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin-bottom: 28px;
+  color: #2d4379;
+}
+
+.marketing .col-lg-4 {
+  margin-bottom: 1.5rem;
+}
+
+.marketing h2 {
+  font-size: 34px;
+  line-height: 41px;
+  font-weight: bold;
+}
+
+.marketing h2.large {
+  font-weight: bold;
+  font-size: 60px;
+  line-height: 73px;
+  color: #0083ff;
+}
+
+.marketing h3 {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 24px;
+  line-height: 129.2%;
+}
+
+.head h1 {
+  font-weight: bold;
+  font-size: 60px;
+  line-height: 73px;
+}
+
+p {
+  color: #7d879f;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.color-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.marketing img {
+  max-height: 90px;
+  max-width: 90px;
+}
+
+.benefit-image-container {
+  width: 100%;
+  margin-bottom: 50px;
+
+  .benefit-image-background {
+    border-radius: 100%;
+    background-color: #f9f9fa;
+    padding: 20px;
+    display: inline-block;
+  }
+
+  &.blue .benefit-image-background {
+    background-color: #0083ff;
+  }
+
+  &.dark-blue .benefit-image-background {
+    background-color: #2d4379;
+  }
+}
+
+.header-icon-container {
+  position: relative;
+}
+
+.header-icon {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.navbar-brand {
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: bold;
+}
+
+.navbar-custom {
+  background-color: #fff;
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .navbar-text {
+  color: #2d4379;
+}
+
+.navbar-custom .navbar-nav .nav-link {
+  color: #4b5774;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 19px;
+  white-space: nowrap;
+}
+
+.navbar-collapse.show {
+  background-color: #fff;
+}
+
+.navbar-custom .nav-item.active .nav-link,
+.navbar-custom .nav-item:focus .nav-link,
+.navbar-custom .nav-item:hover .nav-link {
+  color: #4b5774;
+}
+
+.text-underline {
+  text-decoration: underline;
+}
+
+.form-control {
+  font-weight: 700;
+  color: #2d4379;
+  background-position: right center !important;
+
+  &:empty {
+    border-bottom-color: rgba(75, 87, 116, 0.2);
+  }
+
+  &:valid,
+  &.form-control.custom-validation.is-valid {
+    color: #2d4379;
+    border-bottom-color: #2d4379;
+  }
+
+  &:focus {
+    color: #0083ff;
+    border-color: #0083ff;
+  }
+
+  &.is-invalid {
+    color: #2d4379;
+    border-color: #ff4136;
+  }
+
+  &:invalid {
+    color: #2d4379;
+  }
+
+  &.is-valid {
+    color: #2d4379;
+    border-color: #28a745;
+  }
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-left: 0;
+}
+
+.faq-checkboxes {
+  font-size: 24px;
+  font-weight: 500;
+
+  p,
+  input.hidden {
+    display: none;
+  }
+
+  p {
+    font-size: 24px;
+    line-height: 40px;
+  }
+
+  label {
+    color: #2d4379;
+    position: relative;
+    cursor: pointer;
+    width: calc(100% - 150px);
+    overflow: visible;
+    margin-bottom: 40px;
+  }
+
+  input:checked + label {
+    color: #0083ff;
+  }
+
+  input:checked + label::after {
+    display: block;
+    background-color: #0083ff;
+    content: '';
+    width: 150px;
+    height: 1px;
+    position: absolute;
+    right: -150px;
+    top: 50%;
+    z-index: 0;
+  }
+
+  input:checked + label + p {
+    display: block;
+  }
+}
+
+.form-group.floating-label > input + label,
+.form-group.floating-label > textarea + label,
+.form-group.floating-label > select + label {
+  color: rgba(75, 87, 116, 0.5);
+  left: 0 !important;
+  font-weight: 700;
+  padding-left: 0 !important;
+}
+
+.form-group.floating-label > input:focus + label,
+.form-group.floating-label > textarea:focus + label,
+.form-group.floating-label > select:focus + label,
+.floating-label > input[placeholder]:not(:placeholder-shown) + label,
+.floating-label > select[placeholder]:not(:placeholder-shown) + label,
+.floating-label > textarea[placeholder]:not(:placeholder-shown) + label {
+  font-weight: normal;
+}
+
+.was-validated select.form-control.is-valid,
+.was-validated select.form-control:valid {
+  background-image: none;
+
+  & + label + .select-caret path {
+    fill: #28a745 !important;
+  }
+}
+
+.form-group.form-control {
+  font-weight: 700;
+}
+
+.todo datalist {
+  position: absolute;
+  background-color: red;
+  color: white;
+}
+
+.todo option {
+  cursor: pointer;
+}
+
+.form-group.floating-label > select > option {
+  padding-left: 0;
+}
+
+.form-control:focus,
+.form-control.is-invalid:focus {
+  box-shadow: none;
+}
+
+.was-validated .form-control:valid:not(.custom-validation),
+.form-control.custom-validation.is-valid:valid {
+  border-color: #28a745;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+
+  &:focus {
+    outline: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  }
+}
+
+.was-validated select.form-control:valid:not(.custom-validation),
+select.form-control.custom-validation.is-valid:valid {
+  background-image: none;
+}
+
+.was-validated .form-control.custom-validation.is-invalid {
+  border-color: #ff4136;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23ff4136' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23ff4136' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+
+  &:focus {
+    outline: #ff4136;
+    box-shadow: 0 0 0 0.2rem rgba(255, 65, 54, 0.25);
+  }
+}
+
+.is-invalid ~ .valid-feedback,
+.is-invalid ~ .valid-tooltip {
+  display: none;
+}
+
+.is-valid ~ .valid-feedback,
+.is-valid ~ .valid-tooltip,
+.form-control.is-invalid + label + .invalid-feedback {
+  display: block;
+}
+
+.form-control.is-valid + label + .valid-feedback {
+  display: block;
+}
+
+.was-validated :valid:not(.custom-validation) ~ .valid-feedback,
+.was-validated :valid:not(.custom-validation) ~ .valid-tooltip {
+  display: block;
+}
+
+.was-validated :valid.custom-validation.is-invalid ~ .valid-feedback,
+.was-validated :valid.custom-validation.is-invalid ~ .valid-tooltip {
+  display: none;
+}
+
+.btn {
+  padding: 16px 40px;
+  background-image: none;
+
+  &:hover {
+    background-image: none;
+  }
+}
+
+.modal-footer .btn {
+  padding: 12px 16px;
+}
+
+.wider.btn {
+  padding-left: 75px;
+  padding-right: 75px;
+}
+
+.optional-label {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.095em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #1abc9c;
+  border-radius: 4px;
+  padding: 3px 4px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translate(100%, -100%);
+}
+
+/* Featurettes
+------------------------- */
+
+.featurette-divider {
+  margin: 2.5rem 0;
+  border-top-color: rgba(0, 0, 0, 0);
+}
+
+.featurette-heading {
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.05rem;
+}
+
+footer {
+  padding-bottom: 20px;
+  font-weight: bold;
+  font-size: 24px;
+  line-height: 24px;
+  color: rgba(75, 87, 116, 0.5);
+}
+
+a,
+.navbar-light .navbar-nav a.nav-link {
+  transition: color;
+}
+
+#main-nav {
+  height: 100px;
+  transition: all 1s ease;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#main-nav.navbar-shrink {
+  height: 55px;
+  background-color: #fff;
+}
+
+/* RESPONSIVE CSS
+-------------------------------------------------- */
+
+@media (min-width: 40em) {
+  .carousel-caption p {
+    margin-bottom: 1.25rem;
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .featurette-heading {
+    font-size: 50px;
+  }
+}
+
+@media (min-width: 992px) {
+  .faq-checkboxes {
+    position: relative;
+
+    label {
+      max-width: 33%;
+    }
+
+    p {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 50%;
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+}

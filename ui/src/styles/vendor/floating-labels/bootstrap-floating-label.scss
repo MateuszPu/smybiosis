@@ -1,0 +1,247 @@
+// Other implementations:
+// - https://www.jquery-az.com/boots/demo.php?ex=52.0_3
+// - https://www.primefaces.org/primereact/showcase/#/inputtext
+// - https://getbootstrap.com/docs/4.3/examples/floating-labels/
+// - [v5: Floating labels](https://github.com/twbs/bootstrap/pull/30449)
+// - https://github.com/tonystar/bootstrap-float-label
+// - https://lusaxweb.github.io/vuesax/components/input.html#label-placeholder
+//   https://github.com/lusaxweb/vuesax/blob/v3.8.62/src/style/components/vsInput.styl#L138
+// - https://material-ui.com/components/text-fields/#outlined
+//   https://github.com/mui-org/material-ui/blob/v3.1.1/packages/material-ui/src/OutlinedInput/OutlinedInput.js
+// - https://eichefam.net/2017/11/01/css-only-floating-label/
+//   https://dev.to/peiche/css-only-floating-label-3cp
+//   https://codepen.io/peiche/pen/xOVpPo
+// - https://material-components.github.io/material-components-web-catalog/#/component/text-field
+
+//  _______________________________
+// |____________________________   |
+// |                            | <== label
+// |                            |  |
+// |____________________________|  | <== input
+// |_______________________________|
+//
+//  ______________________________
+// | top: 0                     |  |
+// |                            |  |
+// |____________________________|  |
+// |                               |
+// |_______________________________|
+//
+//  ____________________________
+// | top: -label height (-21px) |
+// |                            |
+// |____________________________|__
+// |                               |
+// |                               |
+// |                               |
+// |                               |
+// |_______________________________|
+//
+//  ____________________________
+// | top: -21px + (21px / 2)    |
+// |_ _ _ _ _ _ _ _ _ _ _ _ _ _ |__
+// |____________________________|  |
+// |                               |
+// |                               |
+// |                               |
+// |_______________________________|
+//
+// top: - label height + (label height / 2)
+//
+$label-height-sm: $font-size-sm * $input-line-height-sm; // 21px
+$label-top-position-sm: #{- $label-height-sm + $label-height-sm / 2.5}; // -21px + (21px / 2) = -10.5px
+$label-height-md: $font-size-base * $input-line-height; // 24px
+$label-top-position-md: #{- $label-height-md + $label-height-md / 2.5}; // -24px + (24px / 2) = -12px
+$label-height-lg: $font-size-lg * $input-line-height-lg; // 30px
+$label-top-position-lg: #{- $label-height-lg + $label-height-lg / 2.5}; // -30px + (30px / 2) = -15px
+
+@mixin label-common {
+  // Breaks flexbox :-/
+  // ["An absolutely-positioned child of a flex container does not participate in flex layout"](https://stackoverflow.com/a/41033582/990356)
+  position: absolute;
+
+  // Same z-index as .form-control:focus, see https://github.com/twbs/bootstrap/blob/v4.3.1/scss/_input-group.scss#L36
+  z-index: 3;
+
+  // Truncate the text label if larger than the input
+  max-width: 100%;
+  @include text-truncate;
+}
+
+// Support for "right to left" languages
+[dir='rtl'] {
+  %label-inside-input-rtl {
+    left: auto !important;
+    right: 0;
+  }
+  %label-above-input-rtl {
+    left: auto !important;
+    right: $input-padding-x-sm;
+  }
+}
+
+@mixin label-inside-input-common {
+  @include label-common;
+
+  color: $input-placeholder-color;
+
+  top: 0;
+  left: 0;
+
+  // FIXME Why the label shouldn't be clickable?
+  //
+  // Material-UI uses "pointer-events: none" for TextField outlined variant,
+  // see https://github.com/mui-org/material-ui/blob/v4.9.7/packages/material-ui/src/InputLabel/InputLabel.js#L73
+  //
+  // Google does the same in ["Sign in"/"Create your Google Account"](https://accounts.google.com/signin/v2/identifier)
+  pointer-events: none;
+
+  @extend %label-inside-input-rtl;
+}
+
+@mixin label-inside-input-sm {
+  @include label-inside-input-common;
+  @include font-size($input-font-size-sm);
+  padding: calc(#{$input-padding-y-sm} + #{$input-border-width})
+    calc(#{$input-padding-x-sm} + #{$input-border-width});
+}
+
+@mixin label-inside-input-md {
+  @include label-inside-input-common;
+  @include font-size($input-font-size);
+
+  // https://github.com/twbs/bootstrap/blob/v4.1.3/scss/_variables.scss#L410
+  padding: calc(#{$input-padding-y} + #{$input-border-width})
+    calc(#{$input-padding-x} + #{$input-border-width});
+}
+
+@mixin label-inside-input-lg {
+  @include label-inside-input-common;
+  @include font-size($input-font-size-lg);
+  padding: calc(#{$input-padding-y-lg} + #{$input-border-width})
+    calc(#{$input-padding-x-lg} + #{$input-border-width});
+}
+
+// Taken from ["Sign in"/"Create your Google Account"](https://accounts.google.com/signin/v2/identifier)
+// https://github.com/twbs/bootstrap/blob/v4.1.3/scss/mixins/_transition.scss
+// https://github.com/twbs/bootstrap/blob/v4.1.3/scss/_variables.scss#L241
+$transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+@mixin label-above-input-common {
+  @include label-common;
+
+  color: inherit;
+
+  // Hack to hide the input border under the label
+  background-color: $input-bg;
+
+  padding: 0 0.3rem 0 0.3rem;
+
+  left: $input-padding-x-sm;
+
+  // Visible when the label is above an input with a different background color
+  border-radius: $border-radius;
+
+  @extend %label-above-input-rtl;
+}
+
+// If a browser does not support a CSS pseudo-element, we cannot group/merge it with other CSS pseudo-elements:
+// input:focus + label, input:-webkit-autofill + label { ... } // Does not work in Firefox
+// Instead we have to ungroup/unmerge them:
+// input:focus + label { ... } // Work in Firefox
+// input:-webkit-autofill + label { ... } // Does not work in Firefox
+//
+// Sass does not allow to clone a placeholder class
+// https://github.com/sass/sass/issues/2312
+// This is a hack:
+// - if we want to group (share CSS) => use a placeholder class
+// - if we want to ungroup (clone CSS) => use a mixin
+@mixin label-above-input-sm {
+  @include label-above-input-common;
+  font-size: $font-size-sm;
+  top: $label-top-position-sm;
+  // https://stackoverflow.com/a/44156191
+  // [Safari bug with transition and translateY: “jumping” element](https://stackoverflow.com/q/57960955)
+  //transform: translateY(-55%);
+}
+
+@mixin label-above-input-md {
+  @include label-above-input-common;
+  font-size: $font-size-base;
+  top: $label-top-position-md;
+}
+
+@mixin label-above-input-lg {
+  @include label-above-input-common;
+  font-size: $font-size-lg;
+  top: $label-top-position-lg;
+}
+
+@mixin label-above-input {
+  + label,
+  + label.label-sm {
+    @include label-above-input-sm;
+  }
+  + label.label-md {
+    @include label-above-input-md;
+  }
+  + label.label-lg {
+    @include label-above-input-lg;
+  }
+}
+
+.floating-label {
+  position: relative;
+
+  > select {
+    @include label-above-input;
+  }
+
+  // Initial state: the label is inside the input
+  > input + label,
+  > textarea + label {
+    transition: all $transition-fast;
+    @include label-inside-input-md;
+  }
+  > input.form-control-sm + label,
+  > textarea.form-control-sm + label {
+    @include label-inside-input-sm;
+  }
+  > input.form-control-lg + label,
+  > textarea.form-control-lg + label {
+    @include label-inside-input-lg;
+  }
+
+  // Initial state: hide the placeholder
+  > input::placeholder,
+  > textarea::placeholder {
+    color: transparent;
+
+    transition: color $transition-fast;
+  }
+  // Except if <label> is before <input> => not a floating label
+  //
+  // Instead of the 2 CSS statements we could have only one:
+  // "> :not(label) + input::placeholder" but it doesn't work, CSS is hard :-/
+  > label + input::placeholder,
+  > label + textarea::placeholder {
+    color: $input-placeholder-color;
+  }
+
+  // When the input is focused:
+  > input:focus,
+  > textarea:focus {
+    // - show the placeholder
+    // FYI IE hides the placeholder when the input is focused, see https://stackoverflow.com/a/24319798/990356
+    &::placeholder {
+      color: $input-placeholder-color;
+    }
+
+    // - move the label above the input
+    @include label-above-input;
+  }
+}
+
+@import 'webkit-autofill';
+@import 'placeholder-shown';
+@import 'value-attr';
