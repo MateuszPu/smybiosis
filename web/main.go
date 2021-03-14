@@ -57,11 +57,15 @@ func main() {
 		Repository:      payment.CreateSqlRepo(db),
 		GlobalEnv:       &env,
 		PaymentProvider: &stripeProvider,
-		Commission:      0.005,
+		Commission:      0.01,
 		MailService:     &service}
 	globalHandler(&baseServer)
 	userHandlers(&baseServer, &paymentService, &stripeProvider, db)
 	paymentHandlers(&baseServer, &paymentService)
+
+	//cmdStr := "docker run --network host -v /mnt/sda6/Projekty/go/payme/migration:/liquibase/changelog liquibase/liquibase --driver=org.postgresql.Driver --url=\"jdbc:postgresql://127.0.0.1:5432/postgres\" --changeLogFile=master.xml --username=postgres --password=pass update"
+	//out, _ := exec.Command("/bin/sh", "-c", cmdStr).Output()
+	//fmt.Printf("%s", out)
 
 	router.Run(":8080")
 }

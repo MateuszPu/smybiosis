@@ -2,7 +2,6 @@ package mail
 
 import (
 	"bytes"
-	"crypto/tls"
 	"fmt"
 	"github.com/jordan-wright/email"
 	"html/template"
@@ -33,13 +32,14 @@ func (service *Service) SendEmailWithPaymentLink(to string, link string) {
 		t.Execute(&tpl, PaymentLinkData{Link: link})
 
 		e := email.NewEmail()
-		e.From = "No-Reply <wspolpraca@weryfikacja.info>"
+		e.From = fmt.Sprintf("No-Reply <%s>", service.Email)
 		e.To = []string{to}
 		e.Subject = "Awesome Subject"
 		e.HTML = tpl.Bytes()
-		err := e.SendWithTLS(fmt.Sprintf("%s:%s", service.Host, service.Port),
-			smtp.PlainAuth("", service.Email, service.Password, service.Host),
-			&tls.Config{ServerName: service.Host})
+		err := e.Send(fmt.Sprintf("%s:%s", service.Host, service.Port), smtp.PlainAuth("", service.Email, service.Password, service.Host))
+		//err := e.SendWithTLS(fmt.Sprintf("%s:%s", service.Host, service.Port),
+		//	smtp.PlainAuth("", service.Email, service.Password, service.Host),
+		//	&tls.Config{ServerName: service.Host})
 		println(err) //TODO: think about error and retry?
 	}(to, link)
 }
