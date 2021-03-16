@@ -22,6 +22,7 @@ func main() {
 	router.StaticFS("/js", http.Dir("templates/js"))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(createAndReload())
 	router.Use(requestLogger())
 
 	env := server.Env{
@@ -70,6 +71,16 @@ func main() {
 	router.Run(":8080")
 }
 
+func createAndReload() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		status := c.Writer.Status()
+		if status == 404 {
+			c.Redirect(301, "/404")
+		}
+	}
+}
+
 func globalHandler(srv *server.BaseSever) {
 	globalHandler := global.Handler{
 		BaseServer: srv,
@@ -81,9 +92,9 @@ func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service,
 	repo := user.CreateSqlRepo(db)
 	service := user.Service{Repository: &repo, Env: baseServer.Env, PaymentProvider: paymentProvider}
 	userHandler := user.Handler{
-		BaseSever:       baseServer,
-		UserService:     &service,
-		PaymentService:  paymentService,
+		BaseSever:      baseServer,
+		UserService:    &service,
+		PaymentService: paymentService,
 	}
 	userHandler.Routes()
 }
