@@ -17,6 +17,7 @@ type repository interface {
 	bySuccessHash(successHash string) (payment, error)
 	byUserId(id uuid.UUID) (payment, error)
 	statusChange(linkHash string, newStatus string, stripeId string) error
+	byCancelHash(hash string) (payment, error)
 }
 
 type RepositorySql struct {
@@ -57,6 +58,10 @@ func (repo *RepositorySql) bySuccessHash(successHash string) (payment, error) {
 	return repo.findPaymentBy(query)
 }
 
+func (repo *RepositorySql) byCancelHash(cancelHash string) (payment, error) {
+	query := models.PaymentWhere.CanceledHash.EQ(cancelHash)
+	return repo.findPaymentBy(query)
+}
 
 func (repo *RepositorySql) byUserId(userId uuid.UUID) (payment, error) {
 	query := models.PaymentWhere.UserID.EQ(userId.String())

@@ -74,7 +74,7 @@ func (service StripeProvider) CreatePayment(amount int64, commission int64, curr
 		//todo: canceled will ask user do you realy want cancel or you want to back there?
 		//todo; canceled also appears when user re-open the payment link
 		SuccessURL: stripe.String(fmt.Sprintf("%spayments/%s/success", service.Env.Host, successHash)),
-		CancelURL:  stripe.String(fmt.Sprintf("%spayments/%s/cancel/", service.Env.Host, canceledHash)),
+		CancelURL:  stripe.String(fmt.Sprintf("%spayments/%s/cancel", service.Env.Host, canceledHash)),
 	}
 
 	params.SetStripeAccount(stripeAccId)

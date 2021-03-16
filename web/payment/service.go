@@ -57,12 +57,32 @@ func (service *Service) successPayment(successHash string) error {
 		//todo: logger
 		return err
 	}
+	if payment.status != PAYMENT_CREATED {
+		return errors.New("Wrong status payment")
+	}
 	err = service.Repository.statusChange(payment.linkHash.String(), PAYMENT_SUCCESS, payment.stripeIdPayment)
 	if err != nil {
 		//todo: logger
 		return err
 	}
 	return nil
+}
+
+func (service *Service) cancelPayment(cancelHash string) (uuid.UUID, error) {
+	payment, err := service.Repository.byCancelHash(cancelHash)
+	if err != nil {
+		//todo: logger
+		return uuid.UUID{}, err
+	}
+	if payment.status != PAYMENT_CREATED {
+		return uuid.UUID{}, errors.New("Wrong status payment")
+	}
+	err = service.Repository.statusChange(payment.linkHash.String(), PAYMENT_CANCELED, payment.stripeIdPayment)
+	if err != nil {
+		//todo: logger
+		return uuid.UUID{}, err
+	}
+	return payment.linkHash, nil
 }
 
 func (service *Service) createStripePayment(linkHash string) (paymentData, error) {
@@ -72,7 +92,7 @@ func (service *Service) createStripePayment(linkHash string) (paymentData, error
 		//todo: logger
 		return paymentData{}, err
 	}
-	if !strings.EqualFold(payment.status, PAYMENT_CREATED) {
+	if !(payment.status == PAYMENT_CANCELED || payment.status == PAYMENT_CREATED) {
 		//todo: logger
 		return paymentData{}, errors.New("Payment in wrong status")
 	}
