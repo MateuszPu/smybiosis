@@ -54,7 +54,7 @@ func (service StripeProvider) RegistrationLink(externalAccId string, linkId stri
 	return newAcc.URL, nil
 }
 
-func (service StripeProvider) CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, confirmedHash string, canceledHash string) (string, error) {
+func (service StripeProvider) CreatePayment(amount int64, commission int64, currency string, description string, stripeAccId string, successHash string, canceledHash string) (string, error) {
 	params := &stripe.CheckoutSessionParams{
 		PaymentMethodTypes: stripe.StringSlice([]string{
 			string(stripe.PaymentMethodTypeCard),
@@ -72,8 +72,9 @@ func (service StripeProvider) CreatePayment(amount int64, commission int64, curr
 		},
 		//todo: implement two pages for this finished will mark payment as done
 		//todo: canceled will ask user do you realy want cancel or you want to back there?
-		SuccessURL: stripe.String(fmt.Sprintf("%spayment/finished/%s", service.Env.Host, confirmedHash)),
-		CancelURL:  stripe.String(fmt.Sprintf("%spayment/canceled/%s", service.Env.Host, canceledHash)),
+		//todo; canceled also appears when user re-open the payment link
+		SuccessURL: stripe.String(fmt.Sprintf("%spayments/%s/success", service.Env.Host, successHash)),
+		CancelURL:  stripe.String(fmt.Sprintf("%spayments/%s/cancel/", service.Env.Host, canceledHash)),
 	}
 
 	params.SetStripeAccount(stripeAccId)

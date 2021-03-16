@@ -14,6 +14,7 @@ type repository interface {
 	save(payment, uuid.UUID) error
 	byId(id uuid.UUID) (payment, error)
 	byLinkHash(linkHash string) (payment, error)
+	bySuccessHash(successHash string) (payment, error)
 	byUserId(id uuid.UUID) (payment, error)
 	statusChange(linkHash string, newStatus string, stripeId string) error
 }
@@ -50,6 +51,12 @@ func (repo *RepositorySql) byLinkHash(linkHash string) (payment, error) {
 	query := models.PaymentWhere.LinkHash.EQ(linkHash)
 	return repo.findPaymentBy(query)
 }
+
+func (repo *RepositorySql) bySuccessHash(successHash string) (payment, error) {
+	query := models.PaymentWhere.ConfirmedHash.EQ(successHash)
+	return repo.findPaymentBy(query)
+}
+
 
 func (repo *RepositorySql) byUserId(userId uuid.UUID) (payment, error) {
 	query := models.PaymentWhere.UserID.EQ(userId.String())

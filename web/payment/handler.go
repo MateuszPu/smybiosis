@@ -13,12 +13,13 @@ type Handler struct {
 }
 
 func (handler *Handler) Routes() *Handler {
-	handler.BaseSever.Router.GET("/payment/:id", handler.paymentLink())
+	handler.BaseSever.Router.GET("/payments/:id/success", handler.success())
+	handler.BaseSever.Router.GET("/payments/:id", handler.paymentLink())
 	return handler
 }
 
 func (handler *Handler) paymentLink() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/payment.html"))
+	t := template.Must(template.ParseFiles("templates/payment/init.html"))
 	return func(context *gin.Context) {
 		param := context.Param("id")
 		data, err := handler.Service.createStripePayment(param)
@@ -27,5 +28,17 @@ func (handler *Handler) paymentLink() gin.HandlerFunc {
 			context.Redirect(http.StatusFound, "/404")
 		}
 		t.Execute(context.Writer, data)
+	}
+}
+
+func (handler *Handler) success() gin.HandlerFunc {
+	t := template.Must(template.ParseFiles("templates/payment/success.html"))
+	return func(context *gin.Context) {
+		param := context.Param("id")
+		if handler.Service.successPayment(param) != nil {
+			//todo: logger
+			context.Redirect(http.StatusFound, "/404")
+		}
+		t.Execute(context.Writer, paymentData{})
 	}
 }
