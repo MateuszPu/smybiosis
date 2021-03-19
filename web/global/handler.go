@@ -22,6 +22,7 @@ func (handler *Handler) Routes() *Handler {
 func (handler *Handler) error() gin.HandlerFunc {
 	t := template.Must(template.ParseFiles("templates/404.html"))
 	return func(context *gin.Context) {
+		context.AbortWithStatus(404)
 		t.Execute(context.Writer, nil)
 	}
 }
