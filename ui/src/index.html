@@ -78,7 +78,7 @@
                 <div class="row text-left">
                   <div class="col-12">
                     <div class="form-group floating-label">
-                      <input class="form-control my-2" type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" placeholder=" " aria-label="Your email" required name="email" id="email">
+                      <input class="form-control my-2" value="{{.Email}}" type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" placeholder=" " aria-label="Your email" required name="email" id="email">
                       <label for="email">Your email</label>
                       <div class="invalid-feedback">
                         Please provide a valid email.
@@ -87,7 +87,7 @@
                   </div>  
                   <div class="col">
                     <div class="form-group floating-label">
-                      <input class="form-control my-2 custom-validation above-zero" step="0.00000001" type="number" placeholder=" " aria-label="Amount" required name="amount" id="amount">
+                      <input class="form-control my-2 custom-validation above-zero" value="{{.Amount}}" step="0.0001" type="number" placeholder=" " aria-label="Amount" required name="amount" id="amount">
                       <label for="amount">Amount</label>
                       <div class="valid-feedback">
                         Looks good!
@@ -120,7 +120,7 @@
                   </div>
                   <div class="col-12">
                     <div class="form-group floating-label">
-                      <input class="form-control my-2" type="text" placeholder=" " aria-label="Payment title" required name="title" id="title">
+                      <input class="form-control my-2" value="{{.Title}}" type="text" placeholder=" " aria-label="Payment title" required name="title" id="title">
                       <label for="title">Payment title</label>
                       <div class="invalid-feedback">
                         Please provide a valid title.
@@ -128,7 +128,7 @@
                     </div>
                   </div> 
                   <div class="col-12 mt-5">
-                    <button class="btn btn-primary w-100" disabled>Generate Link</button>
+                    <button class="btn btn-primary w-100" disabled>{{.ButtonName}}</button>
                   </div>
                   <div class="col-12 mt-3">
                     <svg class="bi text-accent" width="12" height="12">

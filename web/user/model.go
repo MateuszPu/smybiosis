@@ -11,6 +11,7 @@ const STRIPE_CONFIRMED = "STRIPE_CONFIRMED"
 
 type user struct {
 	id        uuid.UUID
+	cookieId  string
 	stripeId  string
 	linkId    string
 	email     string
@@ -21,6 +22,7 @@ type user struct {
 func (u *user) from(dbUser *models.User) user {
 	return user{
 		id:        uuid.MustParse(dbUser.ID),
+		cookieId:  dbUser.CookieID,
 		stripeId:  dbUser.StripeAccount,
 		linkId:    dbUser.LinkRegistration,
 		email:     dbUser.Email,

@@ -33,6 +33,9 @@
             <column name="status" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+	    <column name="created_at" type="DATETIME" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
     <changeSet id="payment-2" author="mateusz">

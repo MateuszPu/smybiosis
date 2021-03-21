@@ -30,6 +30,7 @@ func main() {
 		Env:       server.EnvVariable("APP_ENV", "local"),
 		Host:      server.EnvVariable("HOST", "http://localhost:8080/"),
 		StripeKey: server.EnvVariable("STRIPE_KEY", "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"),
+		CookieHost: "weryfikacja.info",
 	}
 	stripeProvider := payprovider.StripeProvider{Env: &env}.Init()
 
@@ -54,49 +55,39 @@ func main() {
 		Email:    server.EnvVariable("MAIL_LOGIN", "mail"),
 		Password: server.EnvVariable("MAIL_PASSWORD", "pass"),
 	}
-
+	repo := user.CreateSqlRepo(db)
+	userService := user.Service{Repository: &repo, Env: baseServer.Env, PaymentProvider: &stripeProvider}
 	paymentService := payment.Service{
 		Repository:      payment.CreateSqlRepo(db),
 		GlobalEnv:       &env,
 		PaymentProvider: &stripeProvider,
 		Commission:      0.01,
 		MailService:     &service}
-	globalHandler(&baseServer)
-	userHandlers(&baseServer, &paymentService, &stripeProvider, db)
+
+	globalHandler(&baseServer, db)
+	userHandlers(&baseServer, &paymentService, &userService)
 	paymentHandlers(&baseServer, &paymentService)
 
 	//cmdStr := "docker run --network host -v /mnt/sda6/Projekty/go/payme/migration:/liquibase/changelog liquibase/liquibase --driver=org.postgresql.Driver --url=\"jdbc:postgresql://127.0.0.1:5432/postgres\" --changeLogFile=master.xml --username=postgres --password=pass update"
 	//out, _ := exec.Command("/bin/sh", "-c", cmdStr).Output()
 	//fmt.Printf("%s", out)
 
-	router.Run(":8080")
+	router.Run(":80")
 }
 
-func createAndReload() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/404.html"))
-	return func(c *gin.Context) {
-		c.Next()
-		status := c.Writer.Status()
-		if status == 404 {
-			c.AbortWithStatus(404)
-			t.Execute(c.Writer, nil)
-		}
-	}
-}
-
-func globalHandler(srv *server.BaseSever) {
+func globalHandler(srv *server.BaseSever, db *sql.DB) {
+	repo := global.CreateSqlRepo(db)
 	globalHandler := global.Handler{
 		BaseServer: srv,
+		Repository: &repo,
 	}
 	globalHandler.Routes()
 }
 
-func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service, paymentProvider *payprovider.PaymentProvider, db *sql.DB) {
-	repo := user.CreateSqlRepo(db)
-	service := user.Service{Repository: &repo, Env: baseServer.Env, PaymentProvider: paymentProvider}
+func userHandlers(baseServer *server.BaseSever, paymentService *payment.Service, userService *user.Service) {
 	userHandler := user.Handler{
 		BaseSever:      baseServer,
-		UserService:    &service,
+		UserService:    userService,
 		PaymentService: paymentService,
 	}
 	userHandler.Routes()
@@ -134,5 +125,17 @@ func requestLogger() gin.HandlerFunc {
 		param.Path = path
 		//TODO: put it to ELK? stack?
 		logging.HttpLogger(param).Info()
+	}
+}
+
+func createAndReload() gin.HandlerFunc {
+	t := template.Must(template.ParseFiles("templates/404.html"))
+	return func(c *gin.Context) {
+		c.Next()
+		status := c.Writer.Status()
+		if status == 404 {
+			c.AbortWithStatus(404)
+			t.Execute(c.Writer, nil)
+		}
 	}
 }

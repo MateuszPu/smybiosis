@@ -8,6 +8,9 @@
             <column name="id" type="UUID">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="cookie_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
             <column name="stripe_account" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>

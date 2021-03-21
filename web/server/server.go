@@ -6,6 +6,8 @@ import (
 	"pay.me/v4/logging"
 )
 
+const COOKIE_NAME = "source"
+
 type BaseSever struct {
 	Router *gin.Engine
 	Env    *Env
@@ -20,6 +22,7 @@ type Env struct {
 	Env  string
 	Host string
 	StripeKey string
+	CookieHost string
 }
 
 func EnvVariable(key, defaultValue string) string {

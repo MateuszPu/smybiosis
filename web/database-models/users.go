@@ -24,6 +24,7 @@ import (
 // User is an object representing the database table.
 type User struct {
 	ID               string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CookieID         string    `boil:"cookie_id" json:"cookie_id" toml:"cookie_id" yaml:"cookie_id"`
 	StripeAccount    string    `boil:"stripe_account" json:"stripe_account" toml:"stripe_account" yaml:"stripe_account"`
 	LinkRegistration string    `boil:"link_registration" json:"link_registration" toml:"link_registration" yaml:"link_registration"`
 	Email            string    `boil:"email" json:"email" toml:"email" yaml:"email"`
@@ -36,6 +37,7 @@ type User struct {
 
 var UserColumns = struct {
 	ID               string
+	CookieID         string
 	StripeAccount    string
 	LinkRegistration string
 	Email            string
@@ -43,6 +45,7 @@ var UserColumns = struct {
 	CreatedAt        string
 }{
 	ID:               "id",
+	CookieID:         "cookie_id",
 	StripeAccount:    "stripe_account",
 	LinkRegistration: "link_registration",
 	Email:            "email",
@@ -52,29 +55,9 @@ var UserColumns = struct {
 
 // Generated where
 
-type whereHelpertime_Time struct{ field string }
-
-func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.EQ, x)
-}
-func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.NEQ, x)
-}
-func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 var UserWhere = struct {
 	ID               whereHelperstring
+	CookieID         whereHelperstring
 	StripeAccount    whereHelperstring
 	LinkRegistration whereHelperstring
 	Email            whereHelperstring
@@ -82,6 +65,7 @@ var UserWhere = struct {
 	CreatedAt        whereHelpertime_Time
 }{
 	ID:               whereHelperstring{field: "\"users\".\"id\""},
+	CookieID:         whereHelperstring{field: "\"users\".\"cookie_id\""},
 	StripeAccount:    whereHelperstring{field: "\"users\".\"stripe_account\""},
 	LinkRegistration: whereHelperstring{field: "\"users\".\"link_registration\""},
 	Email:            whereHelperstring{field: "\"users\".\"email\""},
@@ -110,8 +94,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "stripe_account", "link_registration", "email", "status", "created_at"}
-	userColumnsWithoutDefault = []string{"id", "stripe_account", "link_registration", "email", "status"}
+	userAllColumns            = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status", "created_at"}
+	userColumnsWithoutDefault = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status"}
 	userColumnsWithDefault    = []string{"created_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 )

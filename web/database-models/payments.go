@@ -34,6 +34,7 @@ type Payment struct {
 	Amount          float64     `boil:"amount" json:"amount" toml:"amount" yaml:"amount"`
 	Description     string      `boil:"description" json:"description" toml:"description" yaml:"description"`
 	Status          string      `boil:"status" json:"status" toml:"status" yaml:"status"`
+	CreatedAt       time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 
 	R *paymentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L paymentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -50,6 +51,7 @@ var PaymentColumns = struct {
 	Amount          string
 	Description     string
 	Status          string
+	CreatedAt       string
 }{
 	ID:              "id",
 	UserID:          "user_id",
@@ -61,6 +63,7 @@ var PaymentColumns = struct {
 	Amount:          "amount",
 	Description:     "description",
 	Status:          "status",
+	CreatedAt:       "created_at",
 }
 
 // Generated where
@@ -140,6 +143,27 @@ func (w whereHelperfloat64) NIN(slice []float64) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
+type whereHelpertime_Time struct{ field string }
+
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var PaymentWhere = struct {
 	ID              whereHelperstring
 	UserID          whereHelperstring
@@ -151,6 +175,7 @@ var PaymentWhere = struct {
 	Amount          whereHelperfloat64
 	Description     whereHelperstring
 	Status          whereHelperstring
+	CreatedAt       whereHelpertime_Time
 }{
 	ID:              whereHelperstring{field: "\"payments\".\"id\""},
 	UserID:          whereHelperstring{field: "\"payments\".\"user_id\""},
@@ -162,6 +187,7 @@ var PaymentWhere = struct {
 	Amount:          whereHelperfloat64{field: "\"payments\".\"amount\""},
 	Description:     whereHelperstring{field: "\"payments\".\"description\""},
 	Status:          whereHelperstring{field: "\"payments\".\"status\""},
+	CreatedAt:       whereHelpertime_Time{field: "\"payments\".\"created_at\""},
 }
 
 // PaymentRels is where relationship names are stored.
@@ -185,9 +211,9 @@ func (*paymentR) NewStruct() *paymentR {
 type paymentL struct{}
 
 var (
-	paymentAllColumns            = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "stripe_id_payment", "amount", "description", "status"}
+	paymentAllColumns            = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "stripe_id_payment", "amount", "description", "status", "created_at"}
 	paymentColumnsWithoutDefault = []string{"id", "user_id", "link_hash", "confirmed_hash", "canceled_hash", "currency", "stripe_id_payment", "amount", "description", "status"}
-	paymentColumnsWithDefault    = []string{}
+	paymentColumnsWithDefault    = []string{"created_at"}
 	paymentPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -671,6 +697,13 @@ func (o *Payment) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+	}
 
 	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
 		return err
@@ -875,6 +908,13 @@ func (o PaymentSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 func (o *Payment) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no payments provided for upsert")
+	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {

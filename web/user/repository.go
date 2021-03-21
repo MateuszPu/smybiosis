@@ -30,6 +30,7 @@ func (repo *RepositorySql) create(email string, stripeId string) (user, error) {
 		LinkRegistration: uuid.New().String(),
 		Email:            email,
 		Status:           ACCOUNT_CREATED,
+		CookieID:         uuid.New().String(),
 		ID:               uuid.New().String(),
 	}
 	err := dbUser.Insert(context.Background(), repo.database, boil.Infer())

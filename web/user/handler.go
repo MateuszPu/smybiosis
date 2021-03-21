@@ -49,13 +49,14 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 
 		user, _ := handler.UserService.findByEmail(json.Email)
 		if user.email == json.Email {
-			//it means user alread exist in database send link to him
+			//it means user already exist in database send link to him
 			//TODO: deal with situation when user was found but not finish registration process
 			paymentId, err := handler.PaymentService.InitPayment(user.id, json.Currency, json.Amount, json.Description)
 			if err != nil {
 				//todo: log here
 			}
 			handler.PaymentService.GeneratePaymentLink(paymentId)
+			context.SetCookie(server.COOKIE_NAME, user.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)
 			context.Redirect(http.StatusMovedPermanently, "/")
 		} else {
 			link, userId, err := handler.UserService.createUser(json.Email)
@@ -107,6 +108,8 @@ func (handler *Handler) finishRegistration() gin.HandlerFunc {
 			context.Redirect(http.StatusFound, "/404")
 			return
 		}
+		context.SetCookie(server.COOKIE_NAME, usr.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)
+
 		t.Execute(context.Writer, nil)
 		go func(userId uuid.UUID) {
 			handler.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())

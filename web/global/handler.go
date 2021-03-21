@@ -1,6 +1,7 @@
 package global
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"pay.me/v4/payprovider"
@@ -10,7 +11,8 @@ import (
 )
 
 type Handler struct {
-	BaseServer *server.BaseSever
+	BaseServer  *server.BaseSever
+	Repository *repository
 }
 
 func (handler *Handler) Routes() *Handler {
@@ -31,6 +33,10 @@ func (handler *Handler) index() gin.HandlerFunc {
 	t := template.Must(template.ParseFiles("templates/index.html"))
 	type data struct {
 		Currencies []string
+		ButtonName string
+		Email      string
+		Amount     string
+		Title      string
 	}
 	return func(context *gin.Context) {
 		currencies := []string{}
@@ -41,7 +47,20 @@ func (handler *Handler) index() gin.HandlerFunc {
 			currencies = append(currencies, strings.ToUpper(currency.Value))
 		}
 		sort.Strings(currencies)
-		d := data{currencies}
-		t.Execute(context.Writer, d)
+
+		userCookieId, err := context.Cookie(server.COOKIE_NAME)
+		if err != nil {
+			d := data{Currencies: currencies, ButtonName: "Next"}
+			t.Execute(context.Writer, d)
+		} else {
+			userDetails, _ := handler.repository().findUserDetailsBy(userCookieId)
+			d := data{Currencies: currencies, ButtonName: "Next", Email: userDetails.Email, Amount: fmt.Sprintf("%g", userDetails.Amount), Title: userDetails.Title}
+			t.Execute(context.Writer, d)
+		}
+
 	}
+}
+
+func (h *Handler) repository() repository {
+	return *h.Repository
 }
