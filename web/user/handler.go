@@ -20,7 +20,7 @@ type Handler struct {
 func (handler *Handler) Routes() *Handler {
 	handler.BaseSever.Router.POST("/user", handler.createUser())
 	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
-	handler.BaseSever.Router.GET("/confirm/:id", handler.finishRegistration())
+	handler.BaseSever.Router.GET("/confirm/:id", handler.returnFromRegistration())
 	return handler
 }
 
@@ -85,6 +85,12 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 			return
 		}
 
+		if usr.status == STRIPE_CONFIRMED {
+			handler.BaseSever.Logger.Errorf("User is already registered in stripe", err)
+			context.Redirect(http.StatusFound, "/404")
+			return
+		}
+
 		link, err := handler.UserService.registrationLink(usr.stripeId, usr.linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Error while generating stripe link %s", err)
@@ -96,25 +102,20 @@ func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 
 }
 
-func (handler *Handler) finishRegistration() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/finish.html"))
+func (handler *Handler) returnFromRegistration() gin.HandlerFunc {
+	t := template.Must(template.ParseFiles("templates/return.html"))
 	return func(context *gin.Context) {
 		handler.BaseSever.Logger.Infof("Registration finished for %s", context.Param("id"))
 		linkId := context.Param("id")
 		usr, err := handler.UserService.finishedStripeRegistration(linkId)
 
 		if err != nil {
-			handler.BaseSever.Logger.Errorf("Account does not exist for linkId: %s. Cannot finish registration", linkId)
+			handler.BaseSever.Logger.Errorf("Cannot finish registration for linkId: %s. Err: %s", linkId, err)
 			context.Redirect(http.StatusFound, "/404")
 			return
 		}
+
 		context.SetCookie(server.COOKIE_NAME, usr.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)
-
 		t.Execute(context.Writer, nil)
-		go func(userId uuid.UUID) {
-			handler.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())
-			handler.PaymentService.GenerateFirstPaymentLink(userId)
-		}(usr.id)
-
 	}
 }

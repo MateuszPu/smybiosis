@@ -1,15 +1,18 @@
 package user
 
 import (
+	"errors"
 	"github.com/google/uuid"
+	"pay.me/v4/payment"
 	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
 )
 
 type Service struct {
-	Env        *server.Env
-	Repository *repository
+	BaseSever       *server.BaseSever
+	Repository      *repository
 	PaymentProvider *payprovider.PaymentProvider
+	PaymentService  *payment.Service
 }
 
 func (service *Service) repository() repository {
@@ -47,6 +50,18 @@ func (service *Service) registrationLink(stripeAccId string, linkId string) (str
 }
 
 func (service *Service) finishedStripeRegistration(linkId string) (user, error) {
+	usr, err := service.repository().findByLinkId(linkId)
+	if err != nil {
+		return usr, err
+	}
+	if usr.status == STRIPE_CONFIRMED {
+		return usr, errors.New("user is already registered in stripe")
+	}
+
+	go func(userId uuid.UUID) {
+		service.BaseSever.Logger.Infof("Sending payment link for user %s", userId.String())
+		service.PaymentService.GenerateFirstPaymentLink(userId)
+	}(usr.id)
 	return service.repository().updateUserStatus(linkId, STRIPE_CONFIRMED)
 }
 
