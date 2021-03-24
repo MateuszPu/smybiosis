@@ -59,7 +59,7 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			context.SetCookie(server.COOKIE_NAME, user.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)
 			context.Redirect(http.StatusMovedPermanently, "/")
 		} else {
-			link, userId, err := handler.UserService.createUser(json.Email)
+			link, userId, err := handler.UserService.createUser(json.Email, context.GetHeader("user-agent"))
 			if err != nil {
 				handler.BaseSever.Logger.Errorf("User not found in database %s", err)
 				context.Redirect(http.StatusFound, "/404")

@@ -29,4 +29,11 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="user-2" author="mateusz">
+        <addColumn tableName="USERS" >
+            <column name="user_agent"
+                    type="VARCHAR(2000)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

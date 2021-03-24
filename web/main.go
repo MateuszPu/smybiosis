@@ -2,10 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
 	"html/template"
 	"net/http"
+	"os/exec"
 	"pay.me/v4/database"
 	"pay.me/v4/global"
 	"pay.me/v4/logging"
@@ -68,11 +70,11 @@ func main() {
 	userHandlers(&baseServer, &paymentService, &userService)
 	paymentHandlers(&baseServer, &paymentService)
 
-	//cmdStr := "docker run --network host -v /mnt/sda6/Projekty/go/payme/migration:/liquibase/changelog liquibase/liquibase --driver=org.postgresql.Driver --url=\"jdbc:postgresql://127.0.0.1:5432/postgres\" --changeLogFile=master.xml --username=postgres --password=pass update"
-	//out, _ := exec.Command("/bin/sh", "-c", cmdStr).Output()
-	//fmt.Printf("%s", out)
+	cmdStr := "docker run --network host -v /mnt/sda6/Projekty/go/payme/migration:/liquibase/changelog liquibase/liquibase --driver=org.postgresql.Driver --url=\"jdbc:postgresql://127.0.0.1:5432/postgres\" --changeLogFile=master.xml --username=postgres --password=pass update"
+	out, _ := exec.Command("/bin/sh", "-c", cmdStr).Output()
+	fmt.Printf("%s", out)
 
-	router.Run(":80")
+	router.Run(":8080")
 }
 
 func globalHandler(srv *server.BaseSever, db *sql.DB) {

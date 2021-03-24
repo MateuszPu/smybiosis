@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"github.com/google/uuid"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	models "pay.me/v4/database-models"
 )
 
 type repository interface {
-	create(email string, stripeId string) (user, error)
+	create(email string, stripeId string, usrAgent string) (user, error)
 	findByEmail(email string) (user, error)
 	findByLinkId(linkId string) (user, error)
 	updateUserStatus(stripeId string, status string) (user, error)
@@ -24,7 +25,7 @@ func CreateSqlRepo(db *sql.DB) repository {
 	return &RepositorySql{database: db}
 }
 
-func (repo *RepositorySql) create(email string, stripeId string) (user, error) {
+func (repo *RepositorySql) create(email string, stripeId string, usrAgent string) (user, error) {
 	var dbUser = models.User{
 		StripeAccount:    stripeId,
 		LinkRegistration: uuid.New().String(),
@@ -32,6 +33,7 @@ func (repo *RepositorySql) create(email string, stripeId string) (user, error) {
 		Status:           ACCOUNT_CREATED,
 		CookieID:         uuid.New().String(),
 		ID:               uuid.New().String(),
+		UserAgent:        null.StringFrom(usrAgent),
 	}
 	err := dbUser.Insert(context.Background(), repo.database, boil.Infer())
 	if err != nil {

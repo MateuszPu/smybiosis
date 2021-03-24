@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -23,13 +24,14 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	ID               string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	CookieID         string    `boil:"cookie_id" json:"cookie_id" toml:"cookie_id" yaml:"cookie_id"`
-	StripeAccount    string    `boil:"stripe_account" json:"stripe_account" toml:"stripe_account" yaml:"stripe_account"`
-	LinkRegistration string    `boil:"link_registration" json:"link_registration" toml:"link_registration" yaml:"link_registration"`
-	Email            string    `boil:"email" json:"email" toml:"email" yaml:"email"`
-	Status           string    `boil:"status" json:"status" toml:"status" yaml:"status"`
-	CreatedAt        time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	ID               string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	CookieID         string      `boil:"cookie_id" json:"cookie_id" toml:"cookie_id" yaml:"cookie_id"`
+	StripeAccount    string      `boil:"stripe_account" json:"stripe_account" toml:"stripe_account" yaml:"stripe_account"`
+	LinkRegistration string      `boil:"link_registration" json:"link_registration" toml:"link_registration" yaml:"link_registration"`
+	Email            string      `boil:"email" json:"email" toml:"email" yaml:"email"`
+	Status           string      `boil:"status" json:"status" toml:"status" yaml:"status"`
+	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UserAgent        null.String `boil:"user_agent" json:"user_agent,omitempty" toml:"user_agent" yaml:"user_agent,omitempty"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -43,6 +45,7 @@ var UserColumns = struct {
 	Email            string
 	Status           string
 	CreatedAt        string
+	UserAgent        string
 }{
 	ID:               "id",
 	CookieID:         "cookie_id",
@@ -51,6 +54,7 @@ var UserColumns = struct {
 	Email:            "email",
 	Status:           "status",
 	CreatedAt:        "created_at",
+	UserAgent:        "user_agent",
 }
 
 // Generated where
@@ -63,6 +67,7 @@ var UserWhere = struct {
 	Email            whereHelperstring
 	Status           whereHelperstring
 	CreatedAt        whereHelpertime_Time
+	UserAgent        whereHelpernull_String
 }{
 	ID:               whereHelperstring{field: "\"users\".\"id\""},
 	CookieID:         whereHelperstring{field: "\"users\".\"cookie_id\""},
@@ -71,6 +76,7 @@ var UserWhere = struct {
 	Email:            whereHelperstring{field: "\"users\".\"email\""},
 	Status:           whereHelperstring{field: "\"users\".\"status\""},
 	CreatedAt:        whereHelpertime_Time{field: "\"users\".\"created_at\""},
+	UserAgent:        whereHelpernull_String{field: "\"users\".\"user_agent\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -94,8 +100,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status", "created_at"}
-	userColumnsWithoutDefault = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status"}
+	userAllColumns            = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status", "created_at", "user_agent"}
+	userColumnsWithoutDefault = []string{"id", "cookie_id", "stripe_account", "link_registration", "email", "status", "user_agent"}
 	userColumnsWithDefault    = []string{"created_at"}
 	userPrimaryKeyColumns     = []string{"id"}
 )

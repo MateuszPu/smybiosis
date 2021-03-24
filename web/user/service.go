@@ -20,14 +20,14 @@ func (service *Service) paymentProvider() payprovider.PaymentProvider {
 	return *service.PaymentProvider
 }
 
-func (service *Service) createUser(email string) (*string, *uuid.UUID, error) {
+func (service *Service) createUser(email string, usrAgent string) (*string, *uuid.UUID, error) {
 	stripeAccId, err := service.paymentProvider().CreateUser(email)
 	if err != nil {
 		//todo:logger
 		return nil, nil, err
 	}
 
-	usr, err := service.repository().create(email, stripeAccId)
+	usr, err := service.repository().create(email, stripeAccId, usrAgent)
 	if err != nil {
 		//todo:logger
 		return nil, nil, err
