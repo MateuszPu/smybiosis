@@ -19,8 +19,9 @@ type Handler struct {
 
 func (handler *Handler) Routes() *Handler {
 	handler.BaseSever.Router.POST("/user", handler.createUser())
+	handler.BaseSever.Router.POST("/email", handler.customerEmail())
 	handler.BaseSever.Router.GET("/refresh/:id", handler.refreshRegistration())
-	handler.BaseSever.Router.GET("/confirm/:id", handler.returnFromRegistration())
+	handler.BaseSever.Router.GET("/return/:id", handler.returnFromRegistration())
 	return handler
 }
 
@@ -74,6 +75,19 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 	}
 }
 
+func (handler *Handler) customerEmail() gin.HandlerFunc {
+	type request struct {
+		Email    string `json:"email"`
+		Question string `json:"question"`
+	}
+	return func(context *gin.Context) {
+		email := context.PostForm("email")
+		question := context.PostForm("question")
+		handler.UserService.sendCustomerEmail(email, question)
+		context.Redirect(http.StatusMovedPermanently, "/")
+	}
+}
+
 func (handler *Handler) refreshRegistration() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		linkId := context.Param("id")
@@ -107,14 +121,15 @@ func (handler *Handler) returnFromRegistration() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		handler.BaseSever.Logger.Infof("Registration finished for %s", context.Param("id"))
 		linkId := context.Param("id")
-		usr, err := handler.UserService.finishedStripeRegistration(linkId)
 
+		usr, err := handler.UserService.findByLinkId(linkId)
 		if err != nil {
 			handler.BaseSever.Logger.Errorf("Cannot finish registration for linkId: %s. Err: %s", linkId, err)
 			context.Redirect(http.StatusFound, "/404")
 			return
 		}
 
+		//todo: here we need to decide what information dispaly on webpage and should we send email? or maybe just the same webpage but the email content will be based on staus of stripe registration
 		context.SetCookie(server.COOKIE_NAME, usr.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)
 		t.Execute(context.Writer, nil)
 	}

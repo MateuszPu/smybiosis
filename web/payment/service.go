@@ -88,10 +88,19 @@ func (service *Service) cancelPayment(cancelHash string) (uuid.UUID, error) {
 func (service *Service) createStripePayment(linkHash string) (paymentData, error) {
 	//TODO: error handling?
 	payment, err := service.Repository.byLinkHash(linkHash)
-	if err != nil {
-		//todo: logger
-		return paymentData{}, err
-	}
+	//s, _ := account.GetByID("acct_1JD6OCRnGoz26NTZ", nil)
+	//println(s.ID)
+	//if err != nil {
+	//	//todo: logger
+	//	return paymentData{}, err
+	//}
+	//get, _ := session.Get(payment.stripeIdPayment, nil)
+	//pi, _ := paymentintent.Get(
+	//	payment.stripeIdPayment,
+	//	nil,
+	//)
+	//println(pi.Status)
+	//println(get.ID)
 	if !(payment.status == PAYMENT_CANCELED || payment.status == PAYMENT_CREATED) {
 		//todo: logger
 		return paymentData{}, errors.New("Payment in wrong status")

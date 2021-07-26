@@ -20,6 +20,25 @@ type PaymentLinkData struct {
 	Name string
 }
 
+func (service *Service) SendEmailFromCustomer(from string, question string) {
+	go func(from string, question string) {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Recovered in f", r)
+			}
+		}()
+
+		e := email.NewEmail()
+		e.From = fmt.Sprintf("Customer <%s>", from)
+		e.To = []string{"mat.pulka@gmail.com"}
+		e.Subject = "Customer question"
+		e.Text = []byte(question)
+		err := e.Send(fmt.Sprintf("%s:%s", service.Host, service.Port), smtp.PlainAuth("", service.Email, service.Password, service.Host))
+
+		println(err) //TODO: think about error and retry?
+	}(from, question)
+}
+
 func (service *Service) SendEmailWithPaymentLink(to string, link string) {
 	go func(to string, link string) {
 		defer func() {
@@ -34,7 +53,7 @@ func (service *Service) SendEmailWithPaymentLink(to string, link string) {
 		e := email.NewEmail()
 		e.From = fmt.Sprintf("No-Reply <%s>", service.Email)
 		e.To = []string{to}
-		e.Subject = "Awesome Subject"
+		e.Subject = "Your payment link"
 		e.HTML = tpl.Bytes()
 		err := e.Send(fmt.Sprintf("%s:%s", service.Host, service.Port), smtp.PlainAuth("", service.Email, service.Password, service.Host))
 		//err := e.SendWithTLS(fmt.Sprintf("%s:%s", service.Host, service.Port),

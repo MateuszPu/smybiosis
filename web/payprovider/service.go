@@ -39,7 +39,7 @@ func (service StripeProvider) CreateUser(email string) (string, error) {
 
 func (service StripeProvider) RegistrationLink(externalAccId string, linkId string) (string, error) {
 	refreshUrl := fmt.Sprintf("%srefresh/%s", service.Env.Host, linkId)
-	returnUrl := fmt.Sprintf("%sconfirm/%s", service.Env.Host, linkId)
+	returnUrl := fmt.Sprintf("%sreturn/%s", service.Env.Host, linkId)
 	par := &stripe.AccountLinkParams{
 		Account:    stripe.String(externalAccId),
 		RefreshURL: stripe.String(refreshUrl),

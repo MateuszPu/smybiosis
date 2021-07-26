@@ -87,7 +87,7 @@
                   </div>  
                   <div class="col">
                     <div class="form-group floating-label">
-                      <input class="form-control my-2 custom-validation above-zero" value="{{.Amount}}" step="0.0001" type="number" placeholder=" " aria-label="Amount" required name="amount" id="amount">
+                      <input class="form-control my-2 custom-validation above-zero" value="" step="0.01" type="number" placeholder=" " aria-label="Amount" required name="amount" id="amount">
                       <label for="amount">Amount</label>
                       <div class="valid-feedback">
                         Looks good!
@@ -710,7 +710,7 @@
               </div>
             </div>
             <div class="col-12 col-lg-6 mx-auto mt-2">
-              <form class="needs-validation" novalidate>
+              <form class="needs-validation"novalidate method="POST" action="/email" novalidate>
                 <div class="row">
                   <div class="col-12">
                     <div class="form-group floating-label">

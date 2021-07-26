@@ -54,7 +54,7 @@ func (handler *Handler) index() gin.HandlerFunc {
 			t.Execute(context.Writer, d)
 		} else {
 			userDetails, _ := handler.repository().findUserDetailsBy(userCookieId)
-			d := data{Currencies: currencies, ButtonName: "Next", Email: userDetails.Email, Amount: fmt.Sprintf("%g", userDetails.Amount), Title: userDetails.Title}
+			d := data{Currencies: currencies, ButtonName: "Send me a link", Email: userDetails.Email, Amount: fmt.Sprintf("%g", userDetails.Amount), Title: userDetails.Title}
 			t.Execute(context.Writer, d)
 		}
 

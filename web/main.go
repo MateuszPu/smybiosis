@@ -30,7 +30,7 @@ func main() {
 		Env:       server.EnvVariable("APP_ENV", "local"),
 		Host:      server.EnvVariable("HOST", "http://localhost:8080/"),
 		StripeKey: server.EnvVariable("STRIPE_KEY", "sk_test_51HTA7JDx7zNNd5t3lNXjrLaSX618luMWklkNUH86JVPfbfJpWtdnzTgQHU3w674dakLs4WyTbQQPenPXo7AF1yRP00SXmmlsYd"),
-		CookieHost: "weryfikacja.info",
+		CookieHost: server.EnvVariable("COOKIE_HOST", "symbiosis.online"),
 	}
 	stripeProvider := payprovider.StripeProvider{Env: &env}.Init()
 
@@ -50,10 +50,10 @@ func main() {
 	}.CreateDb()
 
 	service := mail.Service{
-		Host:     server.EnvVariable("MAIL_HOST", "some"),
-		Port:     server.EnvVariable("MAIL_PORT", "port"),
-		Email:    server.EnvVariable("MAIL_LOGIN", "mail"),
-		Password: server.EnvVariable("MAIL_PASSWORD", "pass"),
+		Host:     server.EnvVariable("MAIL_HOST", "smtp.gmail.com"),
+		Port:     server.EnvVariable("MAIL_PORT", "587"),
+		Email:    server.EnvVariable("MAIL_LOGIN", "gpw.radar@gmail.com"),
+		Password: server.EnvVariable("MAIL_PASSWORD", "zaxscdvf90$"),
 	}
 	repo := user.CreateSqlRepo(db)
 	paymentService := payment.Service{
@@ -63,7 +63,9 @@ func main() {
 		Commission:      0.01,
 		MailService:     &service}
 
-	userService := user.Service{Repository: &repo, BaseSever: &baseServer, PaymentService: &paymentService, PaymentProvider: &stripeProvider}
+	userService := user.Service{Repository: &repo, BaseSever: &baseServer,
+		PaymentService: &paymentService, PaymentProvider: &stripeProvider,
+		MailService: &service}
 	globalHandler(&baseServer, db)
 	userHandlers(&baseServer, &paymentService, &userService)
 	paymentHandlers(&baseServer, &paymentService)

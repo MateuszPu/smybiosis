@@ -3,6 +3,8 @@ package user
 import (
 	"errors"
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v71/account"
+	"pay.me/v4/mail"
 	"pay.me/v4/payment"
 	"pay.me/v4/payprovider"
 	"pay.me/v4/server"
@@ -13,6 +15,7 @@ type Service struct {
 	Repository      *repository
 	PaymentProvider *payprovider.PaymentProvider
 	PaymentService  *payment.Service
+	MailService     *mail.Service
 }
 
 func (service *Service) repository() repository {
@@ -71,4 +74,27 @@ func (service *Service) findByLinkId(linkId string) (user, error) {
 
 func (service *Service) findByEmail(email string) (user, error) {
 	return service.repository().findByEmail(email)
+}
+
+func (service *Service) sendCustomerEmail(from string, question string) {
+	service.MailService.SendEmailFromCustomer(from, question)
+}
+
+func (service *Service) checkMissingParams(usr user) {
+	acc, err := account.GetByID(usr.stripeId, nil)
+	if err != nil {
+
+	}
+	if acc != nil {
+		if acc.ChargesEnabled {
+			//todo: send email with link
+		} else {
+			//todo: send email with info to fill profile
+		}
+		if !acc.PayoutsEnabled {
+			//todo: send link with info
+		}
+		//todo: error handlong
+		println("errr")
+	}
 }
