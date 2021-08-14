@@ -36,4 +36,16 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="user-3" author="mateusz">
+        <createIndex indexName="created_time_users_index" tableName="USERS">
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex indexName="email_users_index" tableName="USERS">
+            <column name="email"/>
+        </createIndex>
+        <createIndex indexName="link_registration_users_index" tableName="USERS">
+            <column name="link_registration"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

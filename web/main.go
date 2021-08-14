@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq" // here
-	"html/template"
 	"net/http"
 	"pay.me/v4/database"
 	"pay.me/v4/global"
@@ -23,7 +22,7 @@ func main() {
 	router.StaticFS("/js", http.Dir("templates/js"))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	router.Use(createAndReload())
+	//router.Use(createAndReload())
 	router.Use(requestLogger())
 
 	env := server.Env{
@@ -130,14 +129,14 @@ func requestLogger() gin.HandlerFunc {
 	}
 }
 
-func createAndReload() gin.HandlerFunc {
-	t := template.Must(template.ParseFiles("templates/404.html"))
-	return func(c *gin.Context) {
-		c.Next()
-		status := c.Writer.Status()
-		if status == 404 {
-			c.AbortWithStatus(404)
-			t.Execute(c.Writer, nil)
-		}
-	}
-}
+//func createAndReload() gin.HandlerFunc {
+//	//t := template.Must(template.ParseFiles("templates/404.html"))
+//	//return func(c *gin.Context) {
+//	//	c.Next()
+//	//	status := c.Writer.Status()
+//	//	if status == 404 {
+//	//		c.AbortWithStatus(404)
+//	//		t.Execute(c.Writer, nil)
+//	//	}
+//	//}
+//}

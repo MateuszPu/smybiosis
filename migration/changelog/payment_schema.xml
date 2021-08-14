@@ -46,4 +46,19 @@
                                  referencedTableName="users"
                                  validate="true"/>
     </changeSet>
+    <changeSet id="payment-3" author="mateusz">
+        <createIndex indexName="created_time_payments_index" tableName="PAYMENTS">
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex indexName="link_hash_payments_index" tableName="PAYMENTS">
+            <column name="link_hash"/>
+        </createIndex>
+        <createIndex indexName="confirmed_hash_payments_index" tableName="PAYMENTS">
+            <column name="confirmed_hash"/>
+        </createIndex>
+        <createIndex indexName="canceled_hash_payments_index" tableName="PAYMENTS">
+            <column name="canceled_hash"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

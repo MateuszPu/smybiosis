@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"html/template"
 	"net/http"
 	"pay.me/v4/payment"
@@ -48,7 +49,10 @@ func (handler *Handler) createUser() gin.HandlerFunc {
 			return
 		}
 
-		user, _ := handler.UserService.findByEmail(json.Email)
+		user, err := handler.UserService.findByEmail(json.Email)
+		if err != nil {
+			logrus.Info("User not found creating new one")
+		}
 		if user.email == json.Email {
 			//it means user already exist in database send link to him
 			//TODO: deal with situation when user was found but not finish registration process
@@ -128,6 +132,10 @@ func (handler *Handler) returnFromRegistration() gin.HandlerFunc {
 			context.Redirect(http.StatusFound, "/404")
 			return
 		}
+		handler.PaymentService.GenerateFirstPaymentLink(usr.id)
+
+		link, err := handler.UserService.registrationLink(usr.stripeId, usr.linkId)
+		println(link)
 
 		//todo: here we need to decide what information dispaly on webpage and should we send email? or maybe just the same webpage but the email content will be based on staus of stripe registration
 		context.SetCookie(server.COOKIE_NAME, usr.cookieId, 0, "/", handler.BaseSever.Env.CookieHost, false, false)

@@ -35,7 +35,7 @@ func (service *Service) InitPayment(userId uuid.UUID, currency string, amount fl
 
 func (service *Service) GenerateFirstPaymentLink(userId uuid.UUID) {
 	payment, err := service.Repository.byUserId(userId)
-	if err != nil {
+	if err != nil || payment.status != PAYMENT_CREATED {
 		//todo; log here
 		return
 	}
